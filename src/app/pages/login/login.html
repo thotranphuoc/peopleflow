@@ -1,0 +1,55 @@
+<div class="login-page">
+  <div class="login-card ml-card">
+    <h1 class="page-header">Đăng nhập</h1>
+    <p class="login-subtitle">PeopleFlow — Quản lý nhân sự &amp; lương 3P</p>
+
+    <form (ngSubmit)="onSubmit()" class="login-form">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Email</mat-label>
+        <input
+          matInput
+          type="email"
+          [ngModel]="email()"
+          (ngModelChange)="email.set($event)"
+          name="email"
+          required
+        />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Mật khẩu</mat-label>
+        <input
+          matInput
+          type="password"
+          [ngModel]="password()"
+          (ngModelChange)="password.set($event)"
+          name="password"
+          required
+        />
+      </mat-form-field>
+
+      <p class="forgot-link">
+        <a routerLink="/forgot-password">Quên mật khẩu?</a>
+        <span class="sep">·</span>
+        <a routerLink="/register">Đăng ký</a>
+      </p>
+
+      @if (error()) {
+        <p class="error-msg">{{ error() }}</p>
+      }
+
+      <button
+        mat-flat-button
+        color="primary"
+        type="submit"
+        class="submit-btn"
+        [disabled]="loading()"
+      >
+        @if (loading()) {
+          <mat-spinner diameter="20"></mat-spinner>
+        } @else {
+          Đăng nhập
+        }
+      </button>
+    </form>
+  </div>
+</div>

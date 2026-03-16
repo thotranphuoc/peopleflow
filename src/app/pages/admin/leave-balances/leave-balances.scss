@@ -1,0 +1,125 @@
+:host {
+  display: block;
+}
+
+.back-link {
+  margin: -0.25rem 0 1rem;
+  font-size: 0.875rem;
+  a {
+    color: var(--ml-text-muted);
+    text-decoration: none;
+    &:hover {
+      color: var(--ml-primary);
+      text-decoration: underline;
+    }
+  }
+}
+
+.card-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+.header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.year-row {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+.year-label {
+  font-size: 0.875rem;
+  color: var(--ml-text-muted);
+  margin-right: 0.25rem;
+}
+.year-btn {
+  padding: 0.25rem 0.6rem;
+  border: 1px solid var(--ml-border);
+  border-radius: var(--ml-radius);
+  background: var(--ml-bg);
+  cursor: pointer;
+  font-size: 0.8125rem;
+  min-width: 2.5rem;
+  &:hover {
+    background: var(--ml-bg-hover, rgba(0, 0, 0, 0.04));
+  }
+  &.active {
+    background: var(--ml-primary);
+    color: white;
+    border-color: var(--ml-primary);
+  }
+}
+
+.hint {
+  font-size: 0.8125rem;
+  color: var(--ml-text-muted);
+  margin: 0 0 0.75rem;
+}
+.message {
+  font-size: 0.875rem;
+  margin: 0 0 0.75rem;
+  &.error {
+    color: var(--ml-error);
+  }
+}
+
+.grid-wrap {
+  overflow-x: auto;
+  margin-top: 0.5rem;
+}
+.balance-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  thead th {
+    text-align: left;
+    font-weight: 600;
+    color: var(--ml-text-muted);
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--ml-border);
+  }
+  .col-code { width: 6rem; }
+  .col-name { min-width: 10rem; }
+  .col-dept { width: 6rem; }
+  .col-num { width: 5rem; text-align: right; white-space: nowrap; }
+  .col-actions { width: 6rem; text-align: right; }
+  tbody tr {
+    border-bottom: 1px solid var(--ml-border);
+    &.no-balance {
+      background: var(--ml-bg-hover, rgba(0, 0, 0, 0.02));
+    }
+  }
+  td {
+    padding: 0.5rem 0.75rem;
+    vertical-align: middle;
+  }
+  .col-input {
+    padding: 0.25rem 0.5rem;
+  }
+}
+
+.grid-input {
+  width: 4rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--ml-border);
+  border-radius: var(--ml-radius);
+  font-size: 0.875rem;
+  text-align: right;
+  background: var(--ml-bg);
+  &:focus {
+    outline: none;
+    border-color: var(--ml-primary);
+  }
+}
+
+.muted {
+  color: var(--ml-text-muted);
+  font-size: 0.875rem;
+  margin: 0.75rem 0 0;
+}

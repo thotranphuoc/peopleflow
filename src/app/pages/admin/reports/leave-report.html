@@ -1,0 +1,61 @@
+<h1 class="page-header">Báo cáo nghỉ phép</h1>
+<p class="back-link"><a routerLink="/admin">← Quản trị</a></p>
+
+<div class="ml-card">
+  <p class="ml-card-title">Lọc</p>
+  <div class="filter-row">
+    <mat-form-field appearance="outline">
+      <mat-label>Năm</mat-label>
+      <mat-select [ngModel]="year()" (ngModelChange)="year.set($event)">
+        @for (y of years; track y) {
+          <mat-option [value]="y">{{ y }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Phòng ban</mat-label>
+      <mat-select [ngModel]="departmentId()" (ngModelChange)="departmentId.set($event)">
+        <mat-option [value]="null">Tất cả</mat-option>
+        @for (d of departments(); track d.id) {
+          <mat-option [value]="d.id">{{ d.code }} — {{ d.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <button mat-flat-button color="primary" (click)="load()" [disabled]="loading()">Xem báo cáo</button>
+    <button mat-button (click)="exportCsvReport()" [disabled]="loading() || rows().length === 0">Xuất CSV</button>
+  </div>
+
+  @if (loading()) {
+    <p class="muted">Đang tải...</p>
+  } @else {
+    <div class="table-wrap">
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>Mã NV</th>
+            <th>Họ tên</th>
+            <th>Phòng ban</th>
+            <th class="num">Tổng (ngày)</th>
+            <th class="num">Đã dùng</th>
+            <th class="num">Còn lại</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of rows(); track r.employee_id) {
+            <tr>
+              <td>{{ r.employee_code }}</td>
+              <td>{{ r.full_name }}</td>
+              <td>{{ r.department_code ?? '—' }}</td>
+              <td class="num">{{ r.total_days | number:'1.1-1' }}</td>
+              <td class="num">{{ r.used_days | number:'1.1-1' }}</td>
+              <td class="num">{{ r.remaining_days | number:'1.1-1' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (rows().length === 0) {
+      <p class="muted">Không có dữ liệu.</p>
+    }
+  }
+</div>

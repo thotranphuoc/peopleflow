@@ -1,0 +1,92 @@
+:host { display: block; }
+.link-btn { background: none; border: none; color: var(--ml-primary); cursor: pointer; font-size: 0.875rem; padding: 0; }
+.payslip-dl { display: grid; grid-template-columns: 1fr auto; gap: 0.5rem 2rem; margin: 1rem 0; }
+.payslip-dl dt { color: var(--ml-text-muted); }
+.payslip-dl dd { margin: 0; text-align: right; }
+.payslip-dl .net { font-size: 1.125rem; color: var(--ml-primary); }
+.payslip-list { list-style: none; padding: 0; }
+.payslip-list li { margin-bottom: 0.5rem; }
+.period-btn { width: 100%; text-align: left; padding: 0.75rem; border: 1px solid var(--ml-border); border-radius: var(--ml-radius); background: var(--ml-bg-card); cursor: pointer; font-size: 0.9375rem; }
+.period-btn:hover { background: var(--ml-bg); }
+.mfa-note { margin-bottom: 1rem; }
+.muted { color: var(--ml-text-muted); font-size: 0.9375rem; }
+.payslip-actions { margin-top: 1rem; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: flex-start; justify-content: center; padding: 2rem; overflow-y: auto; }
+.modal-panel { background: var(--ml-bg-card, #fff); border-radius: var(--ml-radius, 8px); box-shadow: 0 4px 20px rgba(0,0,0,0.15); max-width: 720px; width: 100%; padding: 1.25rem; margin: auto; }
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+.modal-header h2 { margin: 0; font-size: 1.125rem; }
+.modal-close { background: none; border: none; font-size: 1.5rem; line-height: 1; cursor: pointer; color: var(--ml-text-muted); padding: 0 0.25rem; }
+.modal-close:hover { color: var(--ml-primary); }
+.tax-detail-summary { margin-bottom: 1rem; font-size: 0.875rem; }
+.tax-detail-summary p { margin: 0.25rem 0; }
+.table-wrap { overflow-x: auto; margin-top: 0.75rem; }
+.tax-detail-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.tax-detail-table th { text-align: left; font-weight: 600; color: var(--ml-text-muted); padding: 0.5rem; border-bottom: 1px solid var(--ml-border); }
+.tax-detail-table th.num { text-align: right; }
+.tax-detail-table td { padding: 0.5rem; border-bottom: 1px solid var(--ml-border); }
+.tax-detail-table td.num { text-align: right; }
+.tax-detail-table tfoot .total-row { background: var(--ml-bg-secondary, #f5f5f5); font-weight: 600; }
+.tax-detail-table tfoot td { padding: 0.6rem 0.5rem; border-top: 2px solid var(--ml-border); }
+
+/* In / PDF: chỉ hiển thị phiếu, bỏ card/shadow, bố cục gọn */
+.print-header { display: none; }
+
+@media print {
+  :host {
+    display: block;
+    padding: 0;
+  }
+  .page-header { display: none !important; }
+  .no-print { display: none !important; }
+
+  .payslip-print-area {
+    max-width: 21cm;
+    margin: 0 auto;
+    padding: 1rem 1.5rem;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    background: #fff !important;
+  }
+
+  .print-header {
+    display: block !important;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #1e293b;
+  }
+  .company-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0 0 0.35rem 0;
+    color: #1e293b;
+    letter-spacing: 0.02em;
+  }
+  .company-addr {
+    font-size: 0.8125rem;
+    margin: 0 0 0.2rem 0;
+    color: #475569;
+    line-height: 1.4;
+  }
+  .company-meta {
+    font-size: 0.8125rem;
+    margin: 0 0 0.2rem 0;
+    color: #475569;
+  }
+  .payslip-period-print {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0.75rem 0 0 0;
+    color: #1e293b;
+  }
+
+  .payslip-card .ml-card-title { display: none; }
+  .payslip-dl {
+    margin: 0.75rem 0;
+    gap: 0.35rem 1.5rem;
+    font-size: 0.875rem;
+  }
+  .payslip-dl dt { color: #475569; }
+  .payslip-dl dd { color: #1e293b; }
+  .payslip-dl .net { font-size: 1rem; color: #0d9488; }
+}

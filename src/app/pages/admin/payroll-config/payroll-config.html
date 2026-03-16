@@ -1,0 +1,161 @@
+<h1 class="page-header">Cấu hình lương (hợp đồng)</h1>
+<p class="back-link"><a routerLink="/admin">← Quản trị</a></p>
+
+<div class="ml-card">
+  <p class="ml-card-title">Danh sách cấu hình lương theo nhân viên</p>
+  <p class="hint">Cấu hình lương (P1, P2, P3, BHXH %) dùng cho "Tạo từ config lương" ở trang Tạo phiếu lương — P3 do manager nhập sẽ tự động điền vào cột P3 khi tạo phiếu. Mỗi nhân viên có thể có nhiều bản ghi theo ngày hiệu lực.</p>
+  @if (message()) {
+    <p class="message" [class.error]="message()?.startsWith('Lỗi')">{{ message() }}</p>
+  }
+  <header class="card-header">
+    <button mat-flat-button color="primary" (click)="openAdd()">Thêm cấu hình lương</button>
+  </header>
+
+  @if (showAddForm()) {
+    <div class="form-block">
+      <mat-form-field appearance="outline">
+        <mat-label>Nhân viên</mat-label>
+        <mat-select [ngModel]="addEmployeeId()" (ngModelChange)="onAddEmployeeChange($event)">
+          <mat-option [value]="null">— Chọn —</mat-option>
+          @for (e of employees(); track e.id) {
+            <mat-option [value]="e.id">{{ e.employee_code }} — {{ e.full_name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Mức lương (tùy chọn)</mat-label>
+        <mat-select [ngModel]="addSalaryGradeId()" (ngModelChange)="onAddGradeChange($event)">
+          <mat-option [value]="null">— Không chọn —</mat-option>
+          @for (g of grades(); track g.id) {
+            <mat-option [value]="g.id">{{ g.name }} (P1: {{ g.p1_salary | number:'1.0-0' }})</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Ngày hiệu lực</mat-label>
+        <input matInput [matDatepicker]="pickerAdd" [ngModel]="addEffectiveDate()" (ngModelChange)="addEffectiveDate.set($event)" />
+        <mat-datepicker-toggle matIconSuffix [for]="pickerAdd"></mat-datepicker-toggle>
+        <mat-datepicker #pickerAdd></mat-datepicker>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Lương cơ bản (p1)</mat-label>
+        <input matInput type="number" [ngModel]="addP1()" (ngModelChange)="addP1.set(+$event || 0)" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Phụ cấp (p2)</mat-label>
+        <input matInput type="number" [ngModel]="addP2()" (ngModelChange)="addP2.set(+$event || 0)" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>P3 (theo tháng)</mat-label>
+        <input matInput type="number" [ngModel]="addP3()" (ngModelChange)="addP3.set(+$event || 0)" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>% BHXH</mat-label>
+        <input matInput type="number" step="0.1" [ngModel]="addInsuranceRate()" (ngModelChange)="addInsuranceRate.set(+$event || 0)" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Số người phụ thuộc</mat-label>
+        <input matInput type="number" [ngModel]="addDependents()" (ngModelChange)="addDependents.set(+$event || 0)" />
+      </mat-form-field>
+      <div class="form-actions">
+        <button mat-button (click)="closeAdd()">Hủy</button>
+        <button mat-flat-button color="primary" [disabled]="addSubmitting()" (click)="submitAdd()">Thêm</button>
+      </div>
+      @if (addError()) {
+        <p class="error-msg">{{ addError() }}</p>
+      }
+    </div>
+  }
+
+  @if (loading()) {
+    <p class="muted">Đang tải...</p>
+  } @else {
+    <div class="table-wrap">
+      <table class="config-table">
+        <thead>
+          <tr>
+            <th>Mã NV</th>
+            <th>Họ tên</th>
+            <th>Ngày hiệu lực</th>
+            <th class="num">P1</th>
+            <th class="num">P2</th>
+            <th class="num">P3</th>
+            <th class="num">% BHXH</th>
+            <th class="num">Người phụ thuộc</th>
+            <th class="col-actions"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of list(); track row.id) {
+            <tr [class.editing]="editId() === row.id">
+              @if (editId() === row.id) {
+                <td colspan="9" class="edit-cell">
+                  <div class="edit-form">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Mức lương (tùy chọn)</mat-label>
+                      <mat-select [ngModel]="editSalaryGradeId()" (ngModelChange)="onEditGradeChange($event)">
+                        <mat-option [value]="null">— Không chọn —</mat-option>
+                        @for (g of grades(); track g.id) {
+                          <mat-option [value]="g.id">{{ g.name }} (P1: {{ g.p1_salary | number:'1.0-0' }})</mat-option>
+                        }
+                      </mat-select>
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>Ngày hiệu lực</mat-label>
+                      <input matInput [matDatepicker]="pickerEdit" [ngModel]="editEffectiveDate()" (ngModelChange)="editEffectiveDate.set($event)" />
+                      <mat-datepicker-toggle matIconSuffix [for]="pickerEdit"></mat-datepicker-toggle>
+                      <mat-datepicker #pickerEdit></mat-datepicker>
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>P1</mat-label>
+                      <input matInput type="number" [ngModel]="editP1()" (ngModelChange)="editP1.set(+$event || 0)" />
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>P2</mat-label>
+                      <input matInput type="number" [ngModel]="editP2()" (ngModelChange)="editP2.set(+$event || 0)" />
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>P3 (theo tháng)</mat-label>
+                      <input matInput type="number" [ngModel]="editP3()" (ngModelChange)="editP3.set(+$event || 0)" />
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>% BHXH</mat-label>
+                      <input matInput type="number" step="0.1" [ngModel]="editInsuranceRate()" (ngModelChange)="editInsuranceRate.set(+$event || 0)" />
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>Người phụ thuộc</mat-label>
+                      <input matInput type="number" [ngModel]="editDependents()" (ngModelChange)="editDependents.set(+$event || 0)" />
+                    </mat-form-field>
+                    <div class="form-actions">
+                      <button mat-button (click)="cancelEdit()">Hủy</button>
+                      <button mat-flat-button color="primary" [disabled]="editSubmitting()" (click)="submitEdit()">Lưu</button>
+                    </div>
+                    @if (editError()) {
+                      <p class="error-msg">{{ editError() }}</p>
+                    }
+                  </div>
+                </td>
+              } @else {
+                <td>{{ row.employee_code }}</td>
+                <td>{{ row.full_name }}</td>
+                <td>{{ formatDate(row.effective_date) }}</td>
+                <td class="num">{{ row.p1_salary | number:'1.0-0' }}</td>
+                <td class="num">{{ row.p2_salary | number:'1.0-0' }}</td>
+                <td class="num">{{ row.p3_salary | number:'1.0-0' }}</td>
+                <td class="num">{{ row.insurance_rate }}</td>
+                <td class="num">{{ row.dependents_count }}</td>
+                <td class="col-actions">
+                  <button mat-button (click)="openEdit(row)">Sửa</button>
+                  <button mat-button color="warn" (click)="deleteConfig(row)">Xóa</button>
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (list().length === 0) {
+      <p class="muted">Chưa có cấu hình. Bấm "Thêm cấu hình lương" để thêm.</p>
+    }
+  }
+</div>

@@ -1,0 +1,173 @@
+<h1 class="page-header">Báo cáo chấm công</h1>
+<p class="back-link"><a routerLink="/admin">← Quản trị</a></p>
+
+<div class="ml-card">
+  <p class="ml-card-title">Lọc</p>
+  <div class="view-mode-toggle">
+    <button mat-button [class.active]="viewMode() === 'month'" type="button" (click)="setViewMode('month')">Theo tháng</button>
+    <button mat-button [class.active]="viewMode() === 'day'" type="button" (click)="setViewMode('day')">Theo ngày</button>
+    <button mat-button [class.active]="viewMode() === 'pending'" type="button" (click)="setViewMode('pending')">Chờ duyệt</button>
+  </div>
+  <div class="filter-row">
+    @if (viewMode() === 'month') {
+      <mat-form-field appearance="outline">
+        <mat-label>Tháng</mat-label>
+        <mat-select [ngModel]="month()" (ngModelChange)="month.set($event)">
+          @for (m of months; track m) {
+            <mat-option [value]="m">{{ monthLabel(m) }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Năm</mat-label>
+        <mat-select [ngModel]="year()" (ngModelChange)="year.set($event)">
+          @for (y of years; track y) {
+            <mat-option [value]="y">{{ y }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    } @else if (viewMode() === 'pending') {
+      <mat-form-field appearance="outline">
+        <mat-label>Tháng</mat-label>
+        <mat-select [ngModel]="month()" (ngModelChange)="month.set($event)">
+          @for (m of months; track m) {
+            <mat-option [value]="m">{{ monthLabel(m) }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Năm</mat-label>
+        <mat-select [ngModel]="year()" (ngModelChange)="year.set($event)">
+          @for (y of years; track y) {
+            <mat-option [value]="y">{{ y }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    } @else {
+      <mat-form-field appearance="outline">
+        <mat-label>Từ ngày</mat-label>
+        <input matInput [matDatepicker]="pickerFrom" [ngModel]="fromDateObj()" (ngModelChange)="onFromDateChange($event)" />
+        <mat-datepicker-toggle matIconSuffix [for]="pickerFrom"></mat-datepicker-toggle>
+        <mat-datepicker #pickerFrom></mat-datepicker>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Đến ngày</mat-label>
+        <input matInput [matDatepicker]="pickerTo" [ngModel]="toDateObj()" (ngModelChange)="onToDateChange($event)" />
+        <mat-datepicker-toggle matIconSuffix [for]="pickerTo"></mat-datepicker-toggle>
+        <mat-datepicker #pickerTo></mat-datepicker>
+      </mat-form-field>
+    }
+    <mat-form-field appearance="outline">
+      <mat-label>Phòng ban</mat-label>
+      <mat-select [ngModel]="departmentId()" (ngModelChange)="departmentId.set($event)">
+        <mat-option [value]="null">Tất cả</mat-option>
+        @for (d of departments(); track d.id) {
+          <mat-option [value]="d.id">{{ d.code }} — {{ d.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <button mat-flat-button color="primary" (click)="load()" [disabled]="loading()">Xem báo cáo</button>
+    @if (viewMode() === 'month') {
+      <button mat-button (click)="exportCsvReport()" [disabled]="loading() || rows().length === 0">Xuất CSV</button>
+    } @else if (viewMode() === 'day' || viewMode() === 'pending') {
+      <button mat-button (click)="exportCsvDayReport()" [disabled]="loading() || rowsByDay().length === 0">Xuất CSV</button>
+    }
+  </div>
+
+  @if (loading()) {
+    <p class="muted">Đang tải...</p>
+  } @else if (viewMode() === 'day' || viewMode() === 'pending') {
+    <div class="table-wrap">
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>Nhân viên</th>
+            <th>Ngày</th>
+            <th>Giờ làm</th>
+            <th>Tổng TG làm</th>
+            <th>Trạng thái</th>
+            @if (viewMode() === 'pending') {
+              <th>Lý do bổ sung (NV)</th>
+              <th>Thao tác</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of rowsByDay(); track rowKey(r)) {
+            <tr>
+              <td>
+                <div class="cell-main">{{ r.full_name }}</div>
+                <div class="cell-sub">{{ r.employee_code }}</div>
+              </td>
+              <td>{{ r.work_date | date:'MM-dd' }}</td>
+              <td>
+                @if (r.check_in_time || r.check_out_time) {
+                  <span class="day-range">
+                    {{ r.check_in_time ? (r.check_in_time | date:'HH:mm') : '—' }}
+                    @if (r.check_out_time) {
+                      <span class="day-range-sep">→</span>
+                      {{ r.check_out_time | date:'HH:mm' }}
+                    }
+                  </span>
+                } @else {
+                  —
+                }
+              </td>
+              <td>{{ formatDuration(r.total_work_minutes) }}</td>
+              <td>{{ statusLabel(r.status) }}</td>
+              @if (viewMode() === 'pending') {
+                <td class="note-cell">{{ r.supplement_reason ?? '—' }}</td>
+                <td class="actions-cell">
+                  @if (r.status === 'pending') {
+                    <button mat-flat-button color="primary" [disabled]="approvingKey() === rowKey(r)" (click)="openApprovalDialog(r)">{{ approvingKey() === rowKey(r) ? 'Đang xử lý...' : 'Xử lý' }}</button>
+                  } @else {
+                    <span class="muted">—</span>
+                  }
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (rowsByDay().length === 0) {
+      @if (viewMode() === 'pending') {
+        <p class="muted">Không có bản ghi chờ duyệt.</p>
+      } @else {
+        <p class="muted">Không có dữ liệu chấm công trong khoảng từ {{ fromDate() }} đến {{ toDate() }}.</p>
+      }
+    }
+  } @else if (viewMode() === 'month') {
+    <div class="table-wrap">
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>Mã NV</th>
+            <th>Họ tên</th>
+            <th>Phòng ban</th>
+            <th class="num">Ngày làm (lịch)</th>
+            <th class="num">Số ngày công</th>
+            <th class="num">Ngày nghỉ</th>
+            <th class="num">Tổng giờ thiếu</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of rows(); track r.employee_id) {
+            <tr>
+              <td>{{ r.employee_code }}</td>
+              <td>{{ r.full_name }}</td>
+              <td>{{ r.department_code ?? '—' }}</td>
+              <td class="num">{{ r.working_days_in_month }}</td>
+              <td class="num">{{ r.work_days }}</td>
+              <td class="num">{{ r.leave_days }}</td>
+              <td class="num">{{ formatShortfall(r.total_shortfall_minutes) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (rows().length === 0) {
+      <p class="muted">Không có dữ liệu.</p>
+    }
+  }
+</div>

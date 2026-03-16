@@ -1,0 +1,77 @@
+:host {
+  display: block;
+}
+
+.back-link a:hover {
+  color: var(--ml-primary);
+  text-decoration: underline;
+}
+
+.theme-hint {
+  font-size: 0.875rem;
+  color: var(--ml-text-muted);
+  margin: -0.25rem 0 1rem;
+}
+
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.theme-day {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 1px solid var(--ml-border);
+  border-radius: var(--ml-radius);
+  background: var(--ml-bg);
+}
+
+.theme-day-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ml-text);
+}
+
+.theme-day-inputs {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.theme-color-picker {
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: 1px solid var(--ml-border);
+  border-radius: 6px;
+  cursor: pointer;
+  background: none;
+}
+
+.theme-color-hex {
+  flex: 1;
+  font-family: monospace;
+  font-size: 0.875rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--ml-border);
+  border-radius: 6px;
+}
+
+.theme-msg {
+  margin: 0.75rem 0 0;
+  font-size: 0.875rem;
+  &.err {
+    color: var(--ml-error);
+  }
+}
+
+.theme-actions {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}

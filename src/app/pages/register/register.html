@@ -1,0 +1,66 @@
+<div class="register-page">
+  <div class="register-card ml-card">
+    <h1 class="page-header">Đăng ký</h1>
+    <p class="register-subtitle">Sau khi đăng ký, admin sẽ gán vai trò (nhân viên / quản lý) cho bạn.</p>
+
+    <form (ngSubmit)="onSubmit()" class="register-form">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Email</mat-label>
+        <input
+          matInput
+          type="email"
+          [ngModel]="email()"
+          (ngModelChange)="email.set($event)"
+          name="email"
+          required
+        />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Mật khẩu</mat-label>
+        <input
+          matInput
+          type="password"
+          [ngModel]="password()"
+          (ngModelChange)="password.set($event)"
+          name="password"
+          required
+          minlength="6"
+        />
+        <mat-hint>Ít nhất 6 ký tự</mat-hint>
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Xác nhận mật khẩu</mat-label>
+        <input
+          matInput
+          type="password"
+          [ngModel]="confirmPassword()"
+          (ngModelChange)="confirmPassword.set($event)"
+          name="confirmPassword"
+          required
+        />
+      </mat-form-field>
+
+      @if (error()) {
+        <p class="error-msg">{{ error() }}</p>
+      }
+
+      <button
+        mat-flat-button
+        color="primary"
+        type="submit"
+        class="submit-btn"
+        [disabled]="loading() || !passwordsMatch"
+      >
+        @if (loading()) {
+          <mat-spinner diameter="20"></mat-spinner>
+        } @else {
+          Đăng ký
+        }
+      </button>
+    </form>
+
+    <p class="back-link">
+      <a routerLink="/login">Đã có tài khoản? Đăng nhập</a>
+    </p>
+  </div>
+</div>

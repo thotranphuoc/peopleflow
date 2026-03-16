@@ -1,0 +1,102 @@
+<h1 class="page-header">Cấu hình chấm công & phạt thiếu giờ</h1>
+<p class="back-link"><a routerLink="/admin">← Quản trị</a></p>
+
+<p class="hint">Số giờ làm bắt buộc mỗi ngày và nghỉ trưa dùng để tính thời gian làm hiệu lực (trừ trưa). Chỉ phạt khi làm thiếu so với số giờ bắt buộc; bậc phạt theo số phút thiếu (vd thiếu ≥10 phút → phạt tiền, thiếu ≥120 phút → ½ ngày không lương).</p>
+
+@if (message()) {
+  <p class="message" [class.error]="message()?.startsWith('Lỗi')">{{ message() }}</p>
+}
+
+<div class="ml-card">
+  <p class="ml-card-title">Số giờ làm/ngày & nghỉ trưa</p>
+  @if (loading()) {
+    <p class="muted">Đang tải...</p>
+  } @else if (config(); as c) {
+    @if (editConfig()) {
+      <div class="form-inline">
+        <mat-form-field appearance="outline">
+          <mat-label>Số phút làm/ngày</mat-label>
+          <input matInput type="number" [ngModel]="requiredMinutes()" (ngModelChange)="requiredMinutes.set(+$event || 480)" placeholder="480 = 8h" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Giờ vào (tham chiếu)</mat-label>
+          <input matInput type="time" [ngModel]="workStart()" (ngModelChange)="workStart.set($event)" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Giờ ra (tham chiếu)</mat-label>
+          <input matInput type="time" [ngModel]="workEnd()" (ngModelChange)="workEnd.set($event)" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Nghỉ trưa từ</mat-label>
+          <input matInput type="time" [ngModel]="lunchStart()" (ngModelChange)="lunchStart.set($event)" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Nghỉ trưa đến</mat-label>
+          <input matInput type="time" [ngModel]="lunchEnd()" (ngModelChange)="lunchEnd.set($event)" />
+        </mat-form-field>
+        <button mat-button (click)="cancelEditConfig()">Hủy</button>
+        <button mat-flat-button color="primary" [disabled]="configSaving()" (click)="saveConfig()">Lưu</button>
+      </div>
+    } @else {
+      <p>
+        Số phút làm/ngày: <strong>{{ c.required_work_minutes_per_day }}</strong> ({{ (c.required_work_minutes_per_day / 60) | number:'1.1-1' }}h),
+        Nghỉ trưa: <strong>{{ c.lunch_start_time.slice(0, 5) }} – {{ c.lunch_end_time.slice(0, 5) }}</strong>
+        <button mat-button (click)="openEditConfig()">Sửa</button>
+      </p>
+    }
+  } @else {
+    <p class="muted">Chưa có cấu hình. Chạy migration 24 và 26.</p>
+  }
+</div>
+
+<div class="ml-card">
+  <p class="ml-card-title">Bậc phạt thiếu giờ</p>
+  <p class="hint">Thiếu so với số phút làm/ngày: bậc áp dụng là bậc có ngưỡng (phút thiếu) lớn nhất mà ≤ số phút thiếu. VD thiếu ≥10 phút → phạt tiền, thiếu ≥120 phút → ½ ngày không lương.</p>
+  @if (loading()) {
+    <p class="muted">Đang tải...</p>
+  } @else {
+    <div class="table-wrap">
+      <table class="config-table">
+        <thead>
+          <tr>
+            <th>Thiếu từ (phút)</th>
+            <th class="num">Phạt tiền (đồng)</th>
+            <th>½ ngày không lương</th>
+            <th class="col-actions"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of rules(); track r.id) {
+            <tr>
+              @if (editRuleId() === r.id) {
+                <td>{{ r.threshold_minutes }}</td>
+                <td class="num">
+                  <mat-form-field appearance="outline" class="inline-field">
+                    <input matInput type="number" [ngModel]="editPenaltyAmount()" (ngModelChange)="editPenaltyAmount.set(+$event || 0)" />
+                  </mat-form-field>
+                </td>
+                <td>
+                  <mat-checkbox [ngModel]="editHalfDayUnpaid()" (ngModelChange)="editHalfDayUnpaid.set($event)">Có</mat-checkbox>
+                </td>
+                <td class="col-actions">
+                  <button mat-button (click)="cancelEditRule()">Hủy</button>
+                  <button mat-flat-button color="primary" [disabled]="ruleSaving()" (click)="saveRule()">Lưu</button>
+                </td>
+              } @else {
+                <td>{{ r.threshold_minutes }}</td>
+                <td class="num">{{ r.penalty_amount | number:'1.0-0' }}</td>
+                <td>{{ r.half_day_unpaid ? 'Có' : 'Không' }}</td>
+                <td class="col-actions">
+                  <button mat-button (click)="openEditRule(r)">Sửa</button>
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (rules().length === 0) {
+      <p class="muted">Chưa có bậc phạt. Chạy migration 26-shortfall-penalty-and-config.sql.</p>
+    }
+  }
+</div>

@@ -1,0 +1,70 @@
+<h1 class="page-header">Nhật ký thao tác (Audit log)</h1>
+<p class="back-link"><a routerLink="/admin">← Quản trị</a></p>
+
+<div class="ml-card">
+  <p class="ml-card-title">Bộ lọc</p>
+  <div class="filter-row">
+    <mat-form-field appearance="outline">
+      <mat-label>Bảng</mat-label>
+      <mat-select [ngModel]="tableFilter()" (ngModelChange)="tableFilter.set($event)">
+        @for (o of tableOptions; track o.value) {
+          <mat-option [value]="o.value">{{ o.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Thao tác</mat-label>
+      <mat-select [ngModel]="actionFilter()" (ngModelChange)="actionFilter.set($event)">
+        @for (o of actionOptions; track o.value) {
+          <mat-option [value]="o.value">{{ o.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Từ ngày</mat-label>
+      <input matInput type="date" [ngModel]="fromDate()" (ngModelChange)="fromDate.set($event)" />
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Đến ngày</mat-label>
+      <input matInput type="date" [ngModel]="toDate()" (ngModelChange)="toDate.set($event)" />
+    </mat-form-field>
+    <button mat-flat-button color="primary" (click)="load()" [disabled]="loading()">Tải</button>
+  </div>
+  <p class="hint">Ghi lại các thao tác: lưu/công bố phiếu lương, duyệt/từ chối đơn, cập nhật cấu hình lương.</p>
+
+  @if (loading()) {
+    <p class="muted">Đang tải...</p>
+  } @else {
+    <div class="table-wrap">
+      <table class="audit-table">
+        <thead>
+          <tr>
+            <th>Thời gian</th>
+            <th>Bảng</th>
+            <th>Thao tác</th>
+            <th>Record ID</th>
+            <th>Người thực hiện</th>
+            <th>Giá trị trước</th>
+            <th>Giá trị sau</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows(); track row.id) {
+            <tr>
+              <td class="date-cell">{{ formatDate(row.action_at) }}</td>
+              <td>{{ row.table_name }}</td>
+              <td>{{ row.action }}</td>
+              <td class="id-cell">{{ row.record_id ?? '—' }}</td>
+              <td class="actor-cell">{{ actorLabel(row.action_by) }}</td>
+              <td class="preview-cell" [title]="jsonPreview(row.old_value, 500)">{{ jsonPreview(row.old_value) }}</td>
+              <td class="preview-cell" [title]="jsonPreview(row.new_value, 500)">{{ jsonPreview(row.new_value) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (rows().length === 0) {
+      <p class="muted">Không có bản ghi nào.</p>
+    }
+  }
+</div>

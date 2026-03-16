@@ -1,0 +1,134 @@
+<h1 class="page-header page-header--hide-on-mobile">Phiếu lương</h1>
+
+@if (selected(); as p) {
+  <div class="ml-card payslip-card payslip-print-area">
+    <div class="print-header">
+      @if (company(); as c) {
+        <p class="company-name">{{ c.company_name }}</p>
+        @if (c.address) { <p class="company-addr">{{ c.address }}</p> }
+        @if (c.tax_code) { <p class="company-meta">MST: {{ c.tax_code }}</p> }
+        @if (c.phone) { <p class="company-meta">Điện thoại: {{ c.phone }}</p> }
+      }
+      <p class="payslip-period-print">Phiếu lương tháng {{ p.month }}/{{ p.year }}</p>
+    </div>
+    <p class="no-print"><button type="button" class="link-btn" (click)="back()">← Danh sách</button></p>
+    <p class="ml-card-title">Tháng {{ p.month }}/{{ p.year }}</p>
+    @if (employeeService.currentEmployee(); as emp) {
+      <dl class="payslip-dl payslip-info">
+        <dt>Mã nhân viên</dt>
+        <dd>{{ emp.employee_code }}</dd>
+        <dt>Tên nhân viên</dt>
+        <dd>{{ emp.full_name }}</dd>
+        @if (emp.tax_code) { <dt>MST</dt> <dd>{{ emp.tax_code }}</dd> }
+        @if (emp.social_insurance_number) { <dt>Sổ BHXH</dt> <dd>{{ emp.social_insurance_number }}</dd> }
+        @if (emp.bank_account) { <dt>STK ngân hàng</dt> <dd>{{ emp.bank_account }} @if (emp.bank_name) { — {{ emp.bank_name }} }</dd> }
+      </dl>
+    }
+    <dl class="payslip-dl">
+      <dt>Lương P1</dt>
+      <dd>{{ p.p1_amount | number:'1.0-0' }}</dd>
+      <dt>Lương P2</dt>
+      <dd>{{ p.p2_amount | number:'1.0-0' }}</dd>
+      <dt>Lương P3</dt>
+      <dd>{{ p.p3_amount | number:'1.0-0' }}</dd>
+      <dt>Phạt / Trừ</dt>
+      <dd>{{ p.penalty_amount | number:'1.0-0' }}</dd>
+      <dt>Thu nhập gộp (Gross)</dt>
+      <dd><strong>{{ p.gross_salary | number:'1.0-0' }}</strong></dd>
+      <dt>BHXH</dt>
+      <dd>{{ p.insurance_amount | number:'1.0-0' }}</dd>
+      <dt>Thuế TNCN</dt>
+      <dd>{{ p.tax_amount | number:'1.0-0' }}</dd>
+      <dt>Thực lãnh (Net)</dt>
+      <dd class="net"><strong>{{ p.net_salary | number:'1.0-0' }} đ</strong></dd>
+    </dl>
+    <p class="payslip-actions no-print">
+      <button mat-button color="primary" (click)="printPayslip()">In / Lưu PDF</button>
+      <button mat-button (click)="openTaxDetailModal(p)">Xem chi tiết cách tính</button>
+    </p>
+  </div>
+
+  @if (showTaxDetailModal()) {
+    <div class="modal-overlay" (click)="closeTaxDetailModal()">
+      <div class="modal-panel" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>Chi tiết cách tính thuế TNCN — Tháng {{ p.month }}/{{ p.year }}</h2>
+          <button type="button" class="modal-close" (click)="closeTaxDetailModal()">×</button>
+        </div>
+        @if (taxDetailLoading()) {
+          <p class="muted">Đang tải...</p>
+        } @else if (taxDetailData(); as d) {
+          <div class="tax-detail-summary">
+            <p><strong>Thu nhập gộp:</strong> {{ d.gross | number:'1.0-0' }} đ &nbsp;→&nbsp; <strong>BHXH:</strong> {{ d.insurance | number:'1.0-0' }} đ &nbsp;|&nbsp; <strong>Giảm trừ bản thân:</strong> {{ d.selfDed | number:'1.0-0' }} đ &nbsp;|&nbsp; <strong>Giảm trừ phụ thuộc ({{ d.dependents }} người):</strong> {{ d.depDedTotal | number:'1.0-0' }} đ</p>
+            <p><strong>Thu nhập chịu thuế:</strong> {{ d.taxable | number:'1.0-0' }} đ &nbsp;|&nbsp; <strong>Tổng thuế:</strong> {{ d.totalTax | number:'1.0-0' }} đ</p>
+          </div>
+          @if (d.taxable <= 0) {
+            <p class="muted">Thu nhập chịu thuế ≤ 0, không phát sinh thuế.</p>
+          } @else if (d.breakdown.length > 0) {
+            <div class="table-wrap">
+              <table class="tax-detail-table">
+                <thead>
+                  <tr>
+                    <th>Bậc</th>
+                    <th class="num">Từ (đồng)</th>
+                    <th class="num">Đến (đồng)</th>
+                    <th class="num">Thuế suất</th>
+                    <th class="num">Thu nhập trong bậc</th>
+                    <th class="num">Thuế bậc</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (r of d.breakdown; track r.bracket.id) {
+                    <tr>
+                      <td>{{ r.bracket.sort_order }}</td>
+                      <td class="num">{{ r.bracket.amount_from | number:'1.0-0' }}</td>
+                      <td class="num">{{ r.bracket.amount_to == null ? '∞' : (r.bracket.amount_to | number:'1.0-0') }}</td>
+                      <td class="num">{{ r.bracket.rate_percent }}%</td>
+                      <td class="num">{{ r.incomeInBracket | number:'1.0-0' }}</td>
+                      <td class="num">{{ r.taxInBracket | number:'1.0-0' }}</td>
+                    </tr>
+                  }
+                </tbody>
+                <tfoot>
+                  <tr class="total-row">
+                    <td colspan="4"><strong>Tổng</strong></td>
+                    <td class="num"><strong>{{ d.totalIncomeInBrackets | number:'1.0-0' }}</strong></td>
+                    <td class="num"><strong>{{ d.totalTax | number:'1.0-0' }}</strong></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          }
+        }
+      </div>
+    </div>
+  }
+} @else {
+  <div class="ml-card">
+    <p class="ml-card-title">Chọn kỳ lương</p>
+    <mat-form-field appearance="outline">
+      <mat-label>Năm</mat-label>
+      <mat-select [ngModel]="filterYear()" (ngModelChange)="filterYear.set($event)">
+        @for (y of years; track y) {
+          <mat-option [value]="y">{{ y }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    @if (loading()) {
+      <p class="muted">Đang tải...</p>
+    } @else {
+      <ul class="payslip-list">
+        @for (p of filteredList(); track p.id) {
+          <li>
+            <button type="button" class="period-btn" (click)="select(p)">
+              {{ p.month }}/{{ p.year }} — {{ p.net_salary | number:'1.0-0' }} đ
+            </button>
+          </li>
+        }
+      </ul>
+      @if (filteredList().length === 0) {
+        <p class="muted">Chưa có phiếu lương năm {{ filterYear() }}.</p>
+      }
+    }
+  </div>
+}

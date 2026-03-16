@@ -1,0 +1,88 @@
+<header class="app-toolbar">
+  <a routerLink="/dashboard" class="toolbar-logo">PeopleFlow</a>
+  <button type="button" class="toolbar-menu-btn" (click)="openMenu()" aria-label="Menu">
+    <mat-icon>menu</mat-icon>
+  </button>
+  <nav class="toolbar-nav">
+    @for (item of navItems; track item.path) {
+      <a [routerLink]="item.path" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: item.path === '/dashboard' }">
+        {{ item.label }}
+      </a>
+    }
+    <a routerLink="/notifications" class="nav-notif" title="Thông báo">
+      <span class="material-icons">notifications</span>
+      @if (notificationService.unreadCount() > 0) {
+        <span class="notif-badge">{{ notificationService.unreadCount() }}</span>
+      }
+    </a>
+    @if (employeeService.isManager()) {
+      <a routerLink="/admin" routerLinkActive="active">Quản trị</a>
+    }
+  </nav>
+  <button type="button" class="toolbar-signout" (click)="auth.signOut()">Đăng xuất</button>
+</header>
+
+@if (menuOpen()) {
+  <div class="menu-backdrop" (click)="closeMenu()" role="button" tabindex="0" aria-label="Đóng menu"></div>
+  <aside class="menu-drawer">
+    <div class="menu-header">
+      <span class="menu-title">Menu</span>
+      <button type="button" class="menu-close" (click)="closeMenu()" aria-label="Đóng">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+    <nav class="menu-nav">
+      @for (item of menuNavItems; track item.path) {
+        <a
+          [routerLink]="item.path"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: item.path === '/dashboard' }"
+          class="menu-item"
+          (click)="closeMenu()"
+        >
+          <mat-icon>{{ item.icon }}</mat-icon>
+          <span>{{ item.label }}</span>
+        </a>
+      }
+      <a routerLink="/notifications" class="menu-item" routerLinkActive="active" (click)="closeMenu()">
+        <span class="menu-item-icon-wrap">
+          <mat-icon>notifications</mat-icon>
+          @if (notificationService.unreadCount() > 0) {
+            <span class="notif-badge">{{ notificationService.unreadCount() }}</span>
+          }
+        </span>
+        <span>Thông báo</span>
+      </a>
+      @if (employeeService.isManager()) {
+        <a routerLink="/admin" class="menu-item" routerLinkActive="active" (click)="closeMenu()">
+          <mat-icon>admin_panel_settings</mat-icon>
+          <span>Quản trị</span>
+        </a>
+      }
+      <button type="button" class="menu-item menu-item-signout" (click)="auth.signOut(); closeMenu()">
+        <mat-icon>logout</mat-icon>
+        <span>Đăng xuất</span>
+      </button>
+    </nav>
+  </aside>
+}
+
+<main class="main-content">
+  <div class="content-inner">
+    <router-outlet />
+  </div>
+</main>
+
+<nav class="bottom-nav" aria-label="Bottom navigation">
+  @for (item of bottomNavItems; track item.path) {
+    <a
+      [routerLink]="item.path"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: item.path === '/dashboard' }"
+      class="bottom-nav-item"
+    >
+      <span class="material-icons" aria-hidden="true">{{ item.icon }}</span>
+      <span>{{ item.label }}</span>
+    </a>
+  }
+</nav>

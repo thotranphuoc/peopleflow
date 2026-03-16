@@ -1,0 +1,128 @@
+<h1 class="page-header page-header--hide-on-mobile">Cá nhân</h1>
+
+<p class="profile-hint">
+  Thông tin dưới đây là dữ liệu HR đang quản lý. Nếu có sai sót, vui lòng liên hệ phòng Nhân sự để cập nhật.
+</p>
+
+@if (employeeService.currentEmployee(); as emp) {
+  <div class="profile-sections">
+    <section class="ml-card profile-section">
+      <p class="ml-card-title">Cá nhân & Tổ chức</p>
+      <dl class="profile-dl">
+        <dt>Mã NV</dt>
+        <dd>{{ emp.employee_code }}</dd>
+        <dt>Họ tên</dt>
+        <dd>{{ emp.full_name }}</dd>
+        <dt>Chức danh</dt>
+        <dd>{{ emp.job_title ?? '—' }}</dd>
+        <dt>Email</dt>
+        <dd>{{ emp.email ?? auth.user()?.email ?? '—' }}</dd>
+        <dt>Số điện thoại</dt>
+        <dd>{{ emp.phone ?? '—' }}</dd>
+        <dt>Email đăng nhập</dt>
+        <dd>{{ auth.user()?.email ?? '—' }}</dd>
+        <dt>Vai trò</dt>
+        <dd>{{ roleLabel(emp.role) }}</dd>
+        <dt>Công ty</dt>
+        <dd>{{ companyName(emp.company_id) }}</dd>
+        <dt>Phòng ban</dt>
+        <dd>{{ departmentName(emp.department_id) }}</dd>
+        <dt>Quản lý trực tiếp</dt>
+        <dd>{{ managerName(emp.manager_id) }}</dd>
+        <dt>Giới tính</dt>
+        <dd>{{ emp.gender ?? '—' }}</dd>
+        <dt>Ngày sinh</dt>
+        <dd>{{ formatDate(emp.date_of_birth) }}</dd>
+        <dt>CCCD / CMND</dt>
+        <dd>{{ emp.id_number ?? '—' }}</dd>
+        <dt>Nơi cấp CCCD</dt>
+        <dd>{{ emp.id_issue_place ?? '—' }}</dd>
+        <dt>Ngày cấp CCCD</dt>
+        <dd>{{ formatDate(emp.id_issue_date) }}</dd>
+        <dt>Địa chỉ</dt>
+        <dd>{{ emp.address ?? '—' }}</dd>
+      </dl>
+    </section>
+
+    <section class="ml-card profile-section">
+      <p class="ml-card-title">Hợp đồng & Lao động</p>
+      <dl class="profile-dl">
+        <dt>Loại hình</dt>
+        <dd>{{ employmentTypeLabel(emp.employment_type) }}</dd>
+        <dt>Thời hạn hợp đồng</dt>
+        <dd>{{ contractTypeLabel(emp.contract_type) }}</dd>
+        @if (emp.contract_type === 'fixed') {
+          <dt>Ngày hết hạn HĐ</dt>
+          <dd>{{ formatDate(emp.contract_end_date) }}</dd>
+        }
+        <dt>Ngày vào làm</dt>
+        <dd>{{ formatDate(emp.start_date) }}</dd>
+        <dt>Trạng thái</dt>
+        <dd>{{ statusLabel(emp.status) }}</dd>
+        @if (emp.resignation_date) {
+          <dt>Ngày nghỉ việc</dt>
+          <dd>{{ formatDate(emp.resignation_date) }}</dd>
+        }
+      </dl>
+    </section>
+
+    <section class="ml-card profile-section">
+      <p class="ml-card-title">Thuế & BHXH</p>
+      <dl class="profile-dl">
+        <dt>Mã số thuế (MST)</dt>
+        <dd>{{ emp.tax_code ?? '—' }}</dd>
+        <dt>Số sổ BHXH</dt>
+        <dd>{{ emp.social_insurance_number ?? '—' }}</dd>
+        <dt>Số người phụ thuộc</dt>
+        <dd>{{ emp.dependents_count }}</dd>
+      </dl>
+    </section>
+
+    <section class="ml-card profile-section">
+      <p class="ml-card-title">Ngân hàng</p>
+      <dl class="profile-dl">
+        <dt>Số tài khoản</dt>
+        <dd>{{ emp.bank_account ?? '—' }}</dd>
+        <dt>Ngân hàng</dt>
+        <dd>{{ emp.bank_name ?? '—' }}</dd>
+      </dl>
+    </section>
+
+    <section class="ml-card profile-section">
+      <p class="ml-card-title">Liên hệ khẩn cấp</p>
+      <dl class="profile-dl">
+        <dt>Họ tên</dt>
+        <dd>{{ emp.emergency_contact_name ?? '—' }}</dd>
+        <dt>Số điện thoại</dt>
+        <dd>{{ emp.emergency_contact_phone ?? '—' }}</dd>
+      </dl>
+    </section>
+
+    <section class="ml-card profile-section">
+      <p class="ml-card-title">Người phụ thuộc</p>
+      @if (dependents().length > 0) {
+        <ul class="profile-dependents">
+          @for (d of dependents(); track d.id) {
+            <li class="profile-dependent">
+              <span class="dep-name">{{ d.full_name }}</span>
+              <span class="dep-relation">{{ d.relationship }}</span>
+              @if (d.birth_year) { <span class="dep-year">{{ d.birth_year }}</span> }
+              @if (d.id_number) { <span class="dep-id">CCCD: {{ d.id_number }}</span> }
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="muted">Chưa có người phụ thuộc.</p>
+      }
+    </section>
+
+    <section class="ml-card profile-section">
+      <p class="ml-card-title">Lương</p>
+      <a routerLink="/payslip" class="profile-link">Xem phiếu lương</a>
+    </section>
+  </div>
+} @else {
+  <div class="ml-card">
+    <p class="muted">Đang tải thông tin hoặc chưa có hồ sơ nhân sự.</p>
+  </div>
+}

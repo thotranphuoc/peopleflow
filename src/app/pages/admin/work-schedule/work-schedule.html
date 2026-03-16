@@ -1,0 +1,50 @@
+<h1 class="page-header">Lịch làm việc</h1>
+<p class="back-link"><a routerLink="/admin">← Quản trị</a></p>
+
+<div class="ml-card">
+  <p class="ml-card-title">Cấu hình ngày làm việc công ty</p>
+  <p class="hint">Chọn lịch làm mặc định để tính tổng ngày làm trong tháng (trừ ngày lễ).</p>
+  @if (message()) {
+    <p class="message" [class.error]="message()?.startsWith('Lỗi')">{{ message() }}</p>
+  }
+
+  @if (loading()) {
+    <p class="muted">Đang tải...</p>
+  } @else {
+    <div class="table-wrap">
+      <table class="schedule-table">
+        <thead>
+          <tr>
+            <th>Mã</th>
+            <th>Tên</th>
+            <th class="num">Ngày/tuần</th>
+            <th>Ngày làm</th>
+            <th class="col-action"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (s of list(); track s.id) {
+            <tr>
+              <td><strong>{{ s.code }}</strong></td>
+              <td>{{ s.name }}</td>
+              <td class="num">{{ s.working_days_per_week }}</td>
+              <td>{{ dayLabel(s) }}</td>
+              <td class="col-action">
+                @if (s.is_default) {
+                  <span class="badge-default">Mặc định</span>
+                } @else {
+                  <button mat-button color="primary" (click)="setAsDefault(s)" [disabled]="savingId() === s.id">
+                    {{ savingId() === s.id ? 'Đang lưu...' : 'Đặt làm mặc định' }}
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (list().length === 0) {
+      <p class="muted">Chưa có lịch. Chạy migration 13-work-schedule.sql để seed dữ liệu.</p>
+    }
+  }
+</div>

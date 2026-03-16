@@ -1,0 +1,46 @@
+<h1 class="page-header">Màu theme theo ngày</h1>
+<p class="back-link"><a routerLink="/admin">← Quản trị</a></p>
+
+<p class="theme-hint">
+  Chọn màu chủ đạo cho từng ngày trong tuần. Ứng dụng sẽ tự động áp dụng màu tương ứng theo ngày hiện tại.
+</p>
+
+@if (loading()) {
+  <p class="muted">Đang tải...</p>
+} @else {
+  <div class="ml-card">
+    <p class="ml-card-title">Màu theo ngày</p>
+    <div class="theme-grid">
+      @for (day of dayLabels; track day; let i = $index) {
+        <div class="theme-day">
+          <label class="theme-day-label">{{ day }}</label>
+          <div class="theme-day-inputs">
+            <input
+              type="color"
+              [value]="colors()[i]"
+              (input)="setColor(i, $any($event.target).value)"
+              class="theme-color-picker"
+            />
+            <input
+              type="text"
+              [ngModel]="colors()[i]"
+              (ngModelChange)="setColor(i, $event)"
+              class="theme-color-hex"
+              maxlength="7"
+            />
+          </div>
+          <button mat-button type="button" (click)="previewDay(i)">Xem thử</button>
+        </div>
+      }
+    </div>
+    @if (message()) {
+      <p class="theme-msg" [class.err]="message()?.startsWith('Lỗi')">{{ message() }}</p>
+    }
+    <div class="theme-actions">
+      <button mat-stroked-button type="button" (click)="applyPreset2026()">Gợi ý 7 màu 2026</button>
+      <button mat-flat-button color="primary" (click)="save()" [disabled]="saving()">
+        {{ saving() ? 'Đang lưu...' : 'Lưu' }}
+      </button>
+    </div>
+  </div>
+}

@@ -1,0 +1,85 @@
+<h1 class="page-header">Phòng ban</h1>
+<p class="back-link"><a routerLink="/admin">← Quản trị</a></p>
+
+<div class="ml-card">
+  <p class="ml-card-title">Danh sách phòng ban</p>
+  @if (message()) {
+    <p class="message" [class.error]="message()?.startsWith('Lỗi')">{{ message() }}</p>
+  }
+  <header class="card-header">
+    <button mat-flat-button color="primary" (click)="openAdd()">Thêm phòng ban</button>
+  </header>
+
+  @if (showAddForm()) {
+    <div class="form-block">
+      <mat-form-field appearance="outline">
+        <mat-label>Mã phòng</mat-label>
+        <input matInput [ngModel]="addCode()" (ngModelChange)="addCode.set($event)" placeholder="VD: IT, HR" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Tên phòng ban</mat-label>
+        <input matInput [ngModel]="addName()" (ngModelChange)="addName.set($event)" placeholder="VD: Công nghệ thông tin" />
+      </mat-form-field>
+      <div class="form-actions">
+        <button mat-button (click)="closeAdd()">Hủy</button>
+        <button mat-flat-button color="primary" [disabled]="addSubmitting()" (click)="submitAdd()">Thêm</button>
+      </div>
+      @if (addError()) {
+        <p class="error-msg">{{ addError() }}</p>
+      }
+    </div>
+  }
+
+  @if (loading()) {
+    <p class="muted">Đang tải...</p>
+  } @else {
+    <div class="table-wrap">
+      <table class="dept-table">
+        <thead>
+          <tr>
+            <th>Mã</th>
+            <th>Tên phòng ban</th>
+            <th class="col-actions"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (d of list(); track d.id) {
+            <tr [class.editing]="editId() === d.id">
+              @if (editId() === d.id) {
+                <td colspan="3" class="edit-cell">
+                  <div class="edit-form">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Mã phòng</mat-label>
+                      <input matInput [ngModel]="editCode()" (ngModelChange)="editCode.set($event)" />
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>Tên phòng ban</mat-label>
+                      <input matInput [ngModel]="editName()" (ngModelChange)="editName.set($event)" />
+                    </mat-form-field>
+                    <div class="form-actions">
+                      <button mat-button (click)="cancelEdit()">Hủy</button>
+                      <button mat-flat-button color="primary" [disabled]="editSubmitting()" (click)="submitEdit()">Lưu</button>
+                    </div>
+                    @if (editError()) {
+                      <p class="error-msg">{{ editError() }}</p>
+                    }
+                  </div>
+                </td>
+              } @else {
+                <td><strong>{{ d.code }}</strong></td>
+                <td>{{ d.name }}</td>
+                <td class="col-actions">
+                  <button mat-button (click)="openEdit(d)">Sửa</button>
+                  <button mat-button color="warn" (click)="deleteDept(d)">Xóa</button>
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (list().length === 0) {
+      <p class="muted">Chưa có phòng ban. Bấm "Thêm phòng ban" để thêm.</p>
+    }
+  }
+</div>

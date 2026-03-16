@@ -1,0 +1,7 @@
+:host { display: block; }
+.back-link { margin: -0.25rem 0 1rem; font-size: 0.875rem; }
+.back-link a { color: var(--ml-text-muted); text-decoration: none; }
+.back-link a:hover { color: var(--ml-primary); text-decoration: underline; }
+.filter-card { margin-bottom: 1rem; }
+.employee-select { padding: 0.5rem 0.75rem; min-width: 280px; border-radius: var(--ml-radius); border: 1px solid var(--ml-border); }
+.muted { color: var(--ml-text-muted); }

@@ -1,0 +1,44 @@
+<div class="dashboard">
+  <section class="hero">
+    <p class="hero-greeting">{{ greeting() }}</p>
+    <h1 class="hero-name">{{ displayName() }}</h1>
+    <p class="hero-sub">{{ currentMonthLabel() }}</p>
+  </section>
+
+  <div class="stats-grid">
+    @if (isManager() && pendingCount().length > 0) {
+      <a routerLink="/leave" class="stat-card stat-warning">
+        <span class="stat-icon"><mat-icon>pending_actions</mat-icon></span>
+        <div class="stat-body">
+          <span class="stat-value">{{ pendingCount().length }}</span>
+          <span class="stat-label">Đơn chờ duyệt</span>
+        </div>
+        <mat-icon class="stat-arrow">arrow_forward</mat-icon>
+      </a>
+    }
+    <a routerLink="/leave" class="stat-card stat-balance">
+      <span class="stat-icon"><mat-icon>event_available</mat-icon></span>
+      <div class="stat-body">
+        <span class="stat-value">{{ balanceSummary() }}</span>
+        <span class="stat-label">Quỹ phép năm {{ currentYear }}</span>
+      </div>
+      <mat-icon class="stat-arrow">arrow_forward</mat-icon>
+    </a>
+  </div>
+
+  <section class="quick-actions">
+    <h2 class="section-title">Thao tác nhanh</h2>
+    <div class="action-grid">
+      <a routerLink="/timesheet" class="action-card">
+        <span class="action-icon"><mat-icon>schedule</mat-icon></span>
+        <span class="action-label">Chấm công</span>
+        <span class="action-desc">Xem lịch tháng, check-in/out</span>
+      </a>
+      <a routerLink="/leave" class="action-card">
+        <span class="action-icon"><mat-icon>event_available</mat-icon></span>
+        <span class="action-label">Nghỉ phép</span>
+        <span class="action-desc">Quỹ phép, đơn nghỉ (phép năm, ốm, việc riêng…)</span>
+      </a>
+    </div>
+  </section>
+</div>

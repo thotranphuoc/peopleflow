@@ -1,0 +1,118 @@
+<h1 class="page-header page-header--hide-on-mobile">Chấm công</h1>
+
+<div class="ml-card check-card">
+  <p class="ml-card-title">Hôm nay</p>
+  @if (todayRecord(); as rec) {
+    <div class="check-row">
+      <div class="check-block check-in-block check-block-readonly">
+        <mat-icon class="check-icon">login</mat-icon>
+        <span class="check-time">{{ rec.check_in_time ? (rec.check_in_time | date:'shortTime') : '—' }}</span>
+      </div>
+      <button
+        type="button"
+        class="check-block check-out-block"
+        [disabled]="capturing()"
+        (click)="confirmAndCheckOut()"
+        [title]="rec.check_out_time ? 'Cập nhật Check-out' : 'Check-out'"
+      >
+        <mat-icon class="check-icon">logout</mat-icon>
+        <span class="check-time">{{ rec.check_out_time ? (rec.check_out_time | date:'shortTime') : '—' }}</span>
+      </button>
+    </div>
+    @if (capturing()) {
+      <p class="check-capturing">Đang xử lý...</p>
+    }
+  } @else {
+    <button
+      type="button"
+      class="action-btn check-in"
+      [disabled]="capturing()"
+      (click)="doCheckIn(false)"
+    >
+      <mat-icon class="btn-icon">login</mat-icon>
+      {{ capturing() ? 'Đang chụp ảnh...' : 'Check-in' }}
+    </button>
+  }
+  @if (locationWarning()) {
+    <p class="location-warn">{{ locationWarning() }}</p>
+  }
+  @if (submitError()) {
+    <p class="error-msg">{{ submitError() }}</p>
+  }
+</div>
+
+<div class="ml-card calendar-card">
+  <p class="ml-card-title">Bảng công tháng</p>
+  <div class="calendar-nav">
+    <button type="button" (click)="prevMonth()">‹</button>
+    <span>{{ currentYearMonth() }}</span>
+    <button type="button" (click)="nextMonth()">›</button>
+  </div>
+  <div class="legend">
+    <span class="dot heat-ok">🟢 Đủ 8h</span>
+    <span class="dot heat-mid">🟡 6h–8h / Chờ duyệt</span>
+    <span class="dot heat-bad">🔴 Thiếu (&lt;6h)</span>
+    <span class="dot holiday">🟨 Ngày lễ</span>
+    <span class="dot leave">🟦 Nghỉ phép (P)</span>
+  </div>
+  <p class="legend-note">Click ô để xem chi tiết chấm công / loại nghỉ.</p>
+  @if (loading()) {
+    <p class="muted">Đang tải...</p>
+  } @else {
+    <div class="calendar-wrap">
+      <div class="calendar-header">
+        @for (label of weekdayHeader; track label) {
+          <div class="header-cell" [class.weekend-col]="label === 'CN' || label === 'T7'">{{ label }}</div>
+        }
+      </div>
+      <div class="calendar-grid">
+        @for (d of calendarDays(); track d.key; let i = $index) {
+          <div
+            class="day-cell"
+            [class.today]="d.isToday"
+            [class.weekend-cell]="(i % 7) === 5 || (i % 7) === 6"
+            [class.leave-cell]="!!d.leaveLabel"
+            [class.holiday-cell]="!!d.holidayName && !d.leaveLabel"
+            [class.can-supplement]="d.canSupplement"
+            [class.has-detail]="!!d.leaveLabel || !!d.holidayName || !!d.check_in_time || !!d.check_out_time"
+            [style.background]="cellBackground(d)"
+            [title]="cellTitle(d)"
+            (click)="onDayClick(d, $event); d.canSupplement && openSupplementForm(d)"
+            (dblclick)="onDayDblClick(d, $event)"
+          >
+            @if (d.day) {
+              @if (d.holidayName && !d.leaveLabel) {
+                <span class="day-num">{{ d.day }}</span>
+                <span class="day-holiday">{{ d.holidayName }}</span>
+              } @else if (d.leaveLabel) {
+                <span class="day-num-inline">{{ d.day }} P</span>
+              } @else {
+                <span class="day-num">{{ d.day }}</span>
+              }
+              @if (d.check_in_time || d.check_out_time) {
+                <div class="day-detail">
+                  <span class="day-range">
+                    {{ d.check_in_time ? (d.check_in_time | date:'HH:mm') : '—' }}
+                    @if (d.check_out_time) {
+                      <span class="day-range-sep">→</span>
+                      {{ d.check_out_time | date:'HH:mm' }}
+                    }
+                  </span>
+                  @if (d.durationLabel) {
+                    <span class="day-duration">{{ d.durationLabel }}</span>
+                  }
+                </div>
+              }
+              @if (d.canSupplement) {
+                <button type="button" class="day-supplement-btn" (click)="openSupplementForm(d); $event.stopPropagation()" title="Bổ sung chấm công">
+                  Bổ sung
+                </button>
+              }
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>
+

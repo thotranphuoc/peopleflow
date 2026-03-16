@@ -1,0 +1,141 @@
+<div class="page-head">
+  <h1 class="page-header">Tạo phiếu lương</h1>
+  <a routerLink="/admin" class="back">← Quản trị</a>
+</div>
+
+<div class="ml-card payroll-card">
+  <div class="bar">
+    <div class="bar-row bar-filters">
+      <span class="bar-label">Tháng</span>
+      <select class="bar-select" [ngModel]="month()" (ngModelChange)="month.set(+$event)">
+        @for (m of months; track m) {
+          <option [value]="m">{{ m }}</option>
+        }
+      </select>
+      <span class="bar-label">Năm</span>
+      <select class="bar-select" [ngModel]="year()" (ngModelChange)="year.set(+$event)">
+        @for (y of years; track y) {
+          <option [value]="y">{{ y }}</option>
+        }
+      </select>
+      <span class="bar-label">Phòng</span>
+      <select class="bar-select bar-select-wide" [ngModel]="departmentId() ?? ''" (ngModelChange)="departmentId.set($event === '' ? null : $event)">
+        <option value="">Tất cả</option>
+        @for (d of departments(); track d.id) {
+          <option [value]="d.id">{{ d.code }} — {{ d.name }}</option>
+        }
+      </select>
+      <button type="button" class="btn btn-primary" (click)="load()" [disabled]="payrollService.loading()">Tải</button>
+    </div>
+    <div class="bar-row bar-actions">
+      <button type="button" class="btn btn-secondary" (click)="fillFromConfig()" [disabled]="payrollService.loading()">Từ config</button>
+      <button type="button" class="btn btn-primary" (click)="saveAll()" [disabled]="!hasDirty() || saving()">{{ saving() ? '…' : 'Lưu' }}</button>
+      <mat-slide-toggle class="bar-toggle" [checked]="allPublished()" (change)="onToggleAll($event.checked)" [disabled]="payrollService.loading() || payrollService.rows().length === 0 || publishing() || unpublishing()" color="primary">Công bố tất cả</mat-slide-toggle>
+      <button type="button" class="btn btn-secondary" (click)="exportPayrollCsv()" [disabled]="payrollService.loading() || payrollService.rows().length === 0">CSV</button>
+    </div>
+  </div>
+  @if (workingDaysInMonth() !== null || message()) {
+    <div class="meta">
+      @if (workingDaysInMonth() !== null) {
+        <span>Ngày công (gốc): <strong>{{ workingDaysInMonth() }}</strong></span>
+        <span class="meta-hint">— NV đi trễ ≥120 phút: trừ 0,5 ngày/lần vào ngày công hiệu lực (cột ½ NL).</span>
+      }
+      @if (message()) { <span class="msg" [class.err]="message()?.startsWith('Lỗi')">{{ message() }}</span> }
+    </div>
+  }
+
+  @if (payrollService.loading()) {
+    <p class="muted">Đang tải...</p>
+  } @else if (payrollService.rows().length === 0) {
+    <p class="muted">Chưa có nhân viên. Chọn phòng ban rồi bấm Tải.</p>
+  } @else {
+    <div class="table-scroll">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>Mã</th>
+            <th>Họ tên</th>
+            <th>Phòng</th>
+            <th class="n" title="Số lần ½ ngày không lương (đi trễ ≥120 phút)">½ NL</th>
+            <th class="n">P3</th>
+            <th class="n">Gộp</th>
+            <th class="n">BHXH</th>
+            <th class="n">Thuế</th>
+            <th class="n">Trừ</th>
+            <th class="n">Thực lãnh</th>
+            <th class="pub"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of payrollService.rows(); track row.employee_id) {
+            <tr>
+              <td>{{ row.employee_code }}</td>
+              <td>{{ row.full_name }}</td>
+              <td>{{ row.department_code ?? '—' }}</td>
+              <td class="n" title="Ngày công hiệu lực: {{ workingDaysInMonth() }} - 0,5×{{ row.halfDayUnpaidCount }}">{{ row.halfDayUnpaidCount }}</td>
+              <td class="n cell-edit">
+                @if (isEditingCell(row, 'p3_amount')) {
+                  <input type="text" inputmode="numeric" class="inp" [value]="inputVal(row, 'p3_amount')" appFocusInput
+                    (blur)="commitEdit(row, 'p3_amount', $any($event.target).value)"
+                    (keydown.enter)="$event.target.blur()"
+                    (keydown.escape)="cancelEditCell()"
+                    (input)="setEdit(row, 'p3_amount', +($any($event.target).value.replace(/\s/g, '')) || 0)" />
+                } @else {
+                  <span class="cell-text" (click)="startEdit(row, 'p3_amount')">{{ cellDisplayValue(row, 'p3_amount') }}</span>
+                }
+              </td>
+              <td class="n cell-edit">
+                @if (isEditingCell(row, 'gross_salary')) {
+                  <input type="text" inputmode="numeric" class="inp" [value]="inputVal(row, 'gross_salary')" appFocusInput
+                    (blur)="commitEdit(row, 'gross_salary', $any($event.target).value)"
+                    (keydown.enter)="$event.target.blur()"
+                    (keydown.escape)="cancelEditCell()"
+                    (input)="setEdit(row, 'gross_salary', +($any($event.target).value.replace(/\s/g, '')) || 0)" />
+                } @else {
+                  <span class="cell-text" (click)="startEdit(row, 'gross_salary')">{{ cellDisplayValue(row, 'gross_salary') }}</span>
+                }
+              </td>
+              <td class="n cell-edit">
+                @if (isEditingCell(row, 'insurance_amount')) {
+                  <input type="text" inputmode="numeric" class="inp" [value]="inputVal(row, 'insurance_amount')" appFocusInput
+                    (blur)="commitEdit(row, 'insurance_amount', $any($event.target).value)"
+                    (keydown.enter)="$event.target.blur()"
+                    (keydown.escape)="cancelEditCell()"
+                    (input)="setEdit(row, 'insurance_amount', +($any($event.target).value.replace(/\s/g, '')) || 0)" />
+                } @else {
+                  <span class="cell-text" (click)="startEdit(row, 'insurance_amount')">{{ cellDisplayValue(row, 'insurance_amount') }}</span>
+                }
+              </td>
+              <td class="n cell-edit">
+                @if (isEditingCell(row, 'tax_amount')) {
+                  <input type="text" inputmode="numeric" class="inp" [value]="inputVal(row, 'tax_amount')" appFocusInput
+                    (blur)="commitEdit(row, 'tax_amount', $any($event.target).value)"
+                    (keydown.enter)="$event.target.blur()"
+                    (keydown.escape)="cancelEditCell()"
+                    (input)="setEdit(row, 'tax_amount', +($any($event.target).value.replace(/\s/g, '')) || 0)" />
+                } @else {
+                  <span class="cell-text" (click)="startEdit(row, 'tax_amount')">{{ cellDisplayValue(row, 'tax_amount') }}</span>
+                }
+              </td>
+              <td class="n cell-edit">
+                @if (isEditingCell(row, 'penalty_amount')) {
+                  <input type="text" inputmode="numeric" class="inp" [value]="inputVal(row, 'penalty_amount')" appFocusInput
+                    (blur)="commitEdit(row, 'penalty_amount', $any($event.target).value)"
+                    (keydown.enter)="$event.target.blur()"
+                    (keydown.escape)="cancelEditCell()"
+                    (input)="setEdit(row, 'penalty_amount', +($any($event.target).value.replace(/\s/g, '')) || 0)" />
+                } @else {
+                  <span class="cell-text" (click)="startEdit(row, 'penalty_amount')">{{ cellDisplayValue(row, 'penalty_amount') }}</span>
+                }
+              </td>
+              <td class="n sum">{{ netSalary(row) | number:'1.0-0' }}</td>
+              <td class="pub">
+                <mat-slide-toggle [checked]="isPublished(row)" (change)="onRowToggle(row, $event.checked)" [disabled]="publishingEmployeeId() === row.employee_id || unpublishingEmployeeId() === row.employee_id || publishing() || unpublishing()" color="primary" class="row-toggle"></mat-slide-toggle>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

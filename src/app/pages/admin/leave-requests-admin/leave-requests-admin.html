@@ -1,0 +1,98 @@
+<h1 class="page-header">Quản lý đơn nghỉ phép</h1>
+<p class="back-link"><a routerLink="/admin">← Quản trị</a></p>
+
+<div class="ml-card">
+  <p class="ml-card-title">Lọc</p>
+  <div class="filter-row">
+    <mat-form-field appearance="outline">
+      <mat-label>Từ ngày</mat-label>
+      <input matInput [matDatepicker]="pickerFrom" [ngModel]="fromDateObj()" (ngModelChange)="onFromDateChange($event)" />
+      <mat-datepicker-toggle matIconSuffix [for]="pickerFrom"></mat-datepicker-toggle>
+      <mat-datepicker #pickerFrom></mat-datepicker>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Đến ngày</mat-label>
+      <input matInput [matDatepicker]="pickerTo" [ngModel]="toDateObj()" (ngModelChange)="onToDateChange($event)" />
+      <mat-datepicker-toggle matIconSuffix [for]="pickerTo"></mat-datepicker-toggle>
+      <mat-datepicker #pickerTo></mat-datepicker>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Phòng ban</mat-label>
+      <mat-select [ngModel]="departmentId()" (ngModelChange)="departmentId.set($event)">
+        <mat-option [value]="null">Tất cả</mat-option>
+        @for (d of departments(); track d.id) {
+          <mat-option [value]="d.id">{{ d.code }} — {{ d.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Nhân viên</mat-label>
+      <mat-select [ngModel]="employeeId()" (ngModelChange)="employeeId.set($event)">
+        <mat-option [value]="null">Tất cả</mat-option>
+        @for (e of employees(); track e.id) {
+          <mat-option [value]="e.id">
+            {{ e.employee_code }} — {{ e.full_name }}
+          </mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Trạng thái</mat-label>
+      <mat-select [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)">
+        <mat-option value="all">Tất cả</mat-option>
+        <mat-option value="pending">Chờ duyệt</mat-option>
+        <mat-option value="approved">Đã duyệt</mat-option>
+        <mat-option value="rejected">Từ chối</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <button mat-flat-button color="primary" type="button" (click)="search()" [disabled]="loading()">
+      Xem danh sách
+    </button>
+  </div>
+
+  @if (loading()) {
+    <p class="muted">Đang tải...</p>
+  } @else {
+    <div class="table-wrap">
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>Nhân viên</th>
+            <th>Loại nghỉ</th>
+            <th>Thời gian</th>
+            <th>Phút yêu cầu</th>
+            <th>Trạng thái</th>
+            <th>Lý do (NV)</th>
+            <th>Ghi chú (QL)</th>
+            <th>Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of list(); track r.id) {
+            <tr>
+              <td>
+                <div class="cell-main">{{ employeeLabel(r.employee_id) }}</div>
+              </td>
+              <td>{{ r.leave_type }}</td>
+              <td>
+                {{ r.start_time | date:'dd/MM/yyyy HH:mm' }} →<br />
+                {{ r.end_time | date:'dd/MM/yyyy HH:mm' }}
+              </td>
+              <td>{{ r.total_minutes_requested }}</td>
+              <td>{{ r.status }}</td>
+              <td class="note-cell">{{ r.reason ?? '—' }}</td>
+              <td class="note-cell">{{ r.manager_note ?? '—' }}</td>
+              <td>
+                <button mat-button color="primary" type="button" (click)="openEditDialog(r)">Xử lý</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (list().length === 0) {
+      <p class="muted">Không có đơn nghỉ nào.</p>
+    }
+  }
+</div>
+

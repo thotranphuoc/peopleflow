@@ -1,0 +1,85 @@
+<h1 class="page-header">Phép năm</h1>
+
+<div class="ml-card balance-card">
+  <p class="ml-card-title">Quỹ phép năm {{ currentYear }}</p>
+  @if (loading()) {
+    <p class="muted">Đang tải...</p>
+  } @else if (balance(); as b) {
+    <div class="balance-row">
+      <span class="balance-label">Còn lại:</span>
+      <span class="balance-value">{{ balanceDays() }}</span>
+    </div>
+    <p class="balance-hint">Tổng {{ b.total_minutes / 480 | number:'1.1-1' }} ngày, đã dùng {{ b.used_minutes / 480 | number:'1.1-1' }} ngày. Ngày lễ không trừ phép.</p>
+  } @else {
+    <p class="muted">Chưa có quỹ phép năm {{ currentYear }}. Liên hệ HR để được cấp.</p>
+  }
+</div>
+
+<div class="ml-card section-card">
+  <p class="ml-card-title">Đơn phép năm của tôi</p>
+  <button mat-flat-button color="primary" (click)="openCreate()">Tạo đơn nghỉ phép năm</button>
+
+  @if (showCreateForm()) {
+    <div class="create-form">
+      <mat-form-field appearance="outline">
+        <mat-label>Hình thức</mat-label>
+        <mat-select [ngModel]="createDuration()" (ngModelChange)="createDuration.set($event)">
+          @for (k of durationLabels | keyvalue; track k.key) {
+            <mat-option [value]="k.key">{{ k.value }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Ngày bắt đầu</mat-label>
+        <input matInput [matDatepicker]="pickerStart" [ngModel]="createStartDate()" (ngModelChange)="createStartDate.set($event)" />
+        <mat-datepicker-toggle matIconSuffix [for]="pickerStart"></mat-datepicker-toggle>
+        <mat-datepicker #pickerStart></mat-datepicker>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Giờ bắt đầu</mat-label>
+        <input matInput type="time" [ngModel]="createStartTime()" (ngModelChange)="createStartTime.set($event)" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Ngày kết thúc</mat-label>
+        <input matInput [matDatepicker]="pickerEnd" [ngModel]="createEndDate()" (ngModelChange)="createEndDate.set($event)" />
+        <mat-datepicker-toggle matIconSuffix [for]="pickerEnd"></mat-datepicker-toggle>
+        <mat-datepicker #pickerEnd></mat-datepicker>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Giờ kết thúc</mat-label>
+        <input matInput type="time" [ngModel]="createEndTime()" (ngModelChange)="createEndTime.set($event)" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Lý do (tùy chọn)</mat-label>
+        <textarea matInput [ngModel]="createReason()" (ngModelChange)="createReason.set($event)" rows="2"></textarea>
+      </mat-form-field>
+      @if (createError()) {
+        <p class="error-msg">{{ createError() }}</p>
+      }
+      <div class="form-actions">
+        <button mat-button (click)="closeCreate()">Hủy</button>
+        <button mat-flat-button color="primary" [disabled]="createSubmitting()" (click)="submitCreate()">Gửi đơn</button>
+      </div>
+    </div>
+  }
+
+  @if (loading()) {
+    <p class="muted">Đang tải...</p>
+  } @else {
+    <ul class="request-list my-list">
+      @for (r of annualList(); track r.id) {
+        <li class="request-item">
+          <span class="type">{{ durationLabel(r) }}</span>
+          <span>{{ r.start_time | date:'short' }} – {{ r.end_time | date:'short' }}</span>
+          <span [class]="'status status-' + r.status">{{ statusLabels[r.status] }}</span>
+          @if (r.manager_note) {
+            <span class="note">Ghi chú: {{ r.manager_note }}</span>
+          }
+        </li>
+      }
+    </ul>
+    @if (annualList().length === 0) {
+      <p class="muted">Chưa có đơn phép năm nào.</p>
+    }
+  }
+</div>

@@ -1,0 +1,80 @@
+<h1 class="page-header">Loại nghỉ phép</h1>
+<p class="back-link"><a routerLink="/admin">← Quản trị</a></p>
+
+<div class="ml-card leave-types-card">
+  <header class="card-header">
+    <p class="hint">Cấu hình các loại nghỉ phép (phép năm, ốm, việc riêng, v.v.). Dùng trong form tạo đơn và báo cáo.</p>
+    <button mat-flat-button color="primary" (click)="openCreate()">Thêm loại nghỉ</button>
+  </header>
+
+  @if (showCreateForm()) {
+    <div class="create-form">
+      <mat-form-field appearance="outline">
+        <mat-label>Mã</mat-label>
+        <input matInput [ngModel]="createCode()" (ngModelChange)="createCode.set($event)" placeholder="VD: annual_leave" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="name-field">
+        <mat-label>Tên hiển thị</mat-label>
+        <input matInput [ngModel]="createDisplayName()" (ngModelChange)="createDisplayName.set($event)" placeholder="VD: Phép năm" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="desc-field">
+        <mat-label>Ý nghĩa</mat-label>
+        <input matInput [ngModel]="createDescription()" (ngModelChange)="createDescription.set($event)" placeholder="Giải thích ngắn gọn loại nghỉ này" />
+      </mat-form-field>
+      <mat-checkbox [ngModel]="createHasDuration()" (ngModelChange)="createHasDuration.set($event)">Có chọn hình thức (nguyên/nửa ngày/theo giờ)</mat-checkbox>
+      <mat-checkbox [ngModel]="createDeductAnnual()" (ngModelChange)="createDeductAnnual.set($event)">Trừ phép năm</mat-checkbox>
+      <mat-checkbox [ngModel]="createIsActive()" (ngModelChange)="createIsActive.set($event)">Đang dùng</mat-checkbox>
+      <mat-checkbox [ngModel]="createFormVisible()" (ngModelChange)="createFormVisible.set($event)">Hiện trong form tạo đơn</mat-checkbox>
+      <div class="form-actions">
+        <button mat-button (click)="closeCreate()">Hủy</button>
+        <button mat-flat-button color="primary" [disabled]="createSubmitting()" (click)="submitCreate()">Thêm</button>
+      </div>
+      @if (createError()) {
+        <p class="error-msg">{{ createError() }}</p>
+      }
+    </div>
+  }
+
+  @if (loading()) {
+    <p class="muted">Đang tải...</p>
+  } @else {
+    <div class="table-wrap">
+      <table class="leave-types-table">
+        <thead>
+          <tr>
+            <th class="col-drag"></th>
+            <th class="col-code">Mã</th>
+            <th class="col-name">Tên hiển thị</th>
+            <th class="col-desc">Ý nghĩa</th>
+            <th class="col-icon" title="Có hình thức (nguyên/nửa ngày/theo giờ)">H.thức</th>
+            <th class="col-icon" title="Trừ phép năm">T.phép</th>
+            <th class="col-status">Trạng thái</th>
+            <th class="col-actions"></th>
+          </tr>
+        </thead>
+        <tbody cdkDropList (cdkDropListDropped)="drop($event)">
+          @for (row of list(); track row.id) {
+            <tr class="leave-type-row" cdkDrag>
+              <td class="col-drag" cdkDragHandle><mat-icon class="drag-handle" title="Kéo để sắp xếp">drag_indicator</mat-icon></td>
+              <td class="col-code"><code>{{ row.code }}</code></td>
+              <td class="col-name">{{ row.display_name }}</td>
+              <td class="col-desc"><span class="desc-text">{{ row.description || '—' }}</span></td>
+              <td class="col-icon">@if (row.has_duration) { <mat-icon class="icon-check">check</mat-icon> } @else { <span class="icon-dash">—</span> }</td>
+              <td class="col-icon">@if (row.deduct_annual_leave) { <mat-icon class="icon-check">check</mat-icon> } @else { <span class="icon-dash">—</span> }</td>
+              <td class="col-status">
+                @if (row.is_active) { <mat-icon title="Đang dùng" class="icon-active">check_circle</mat-icon> }
+                @if (row.is_form_visible) { <mat-icon title="Hiện trong form" class="icon-form">description</mat-icon> }
+              </td>
+              <td class="col-actions">
+                <button mat-icon-button (click)="openEdit(row)" title="Sửa"><mat-icon>edit</mat-icon></button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (list().length === 0) {
+      <p class="muted">Chưa có loại nghỉ nào. Chạy migration 29-leave-types.sql để seed dữ liệu mặc định.</p>
+    }
+  }
+</div>

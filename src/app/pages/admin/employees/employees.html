@@ -1,0 +1,310 @@
+<h1 class="page-header">Hồ sơ nhân sự</h1>
+<p><a routerLink="/admin">← Quản trị</a></p>
+
+@if (editingId(); as id) {
+  <div class="ml-card edit-card">
+    <p class="ml-card-title">Sửa thông tin nhân viên</p>
+    <p class="hint">Hồ sơ là nguồn gốc; Cấu hình lương & Phiếu lương tham chiếu từ đây.</p>
+    <form (ngSubmit)="saveEdit()" class="edit-form">
+      <h3 class="form-section">Cá nhân & Tổ chức</h3>
+      <mat-form-field appearance="outline">
+        <mat-label>Họ tên</mat-label>
+        <input matInput [ngModel]="formName()" (ngModelChange)="formName.set($event)" name="name" required />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Chức danh</mat-label>
+        <input matInput [ngModel]="formJobTitle()" (ngModelChange)="formJobTitle.set($event)" name="jobTitle" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Số điện thoại</mat-label>
+        <input matInput [ngModel]="formPhone()" (ngModelChange)="formPhone.set($event)" name="phone" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Email</mat-label>
+        <input matInput type="email" [ngModel]="formEmail()" (ngModelChange)="formEmail.set($event)" name="email" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Vai trò</mat-label>
+        <mat-select [ngModel]="formRole()" (ngModelChange)="formRole.set($event)" name="role">
+          <mat-option value="employee">Nhân viên</mat-option>
+          <mat-option value="manager">Quản lý</mat-option>
+          <mat-option value="hr">HR</mat-option>
+          <mat-option value="admin">Admin</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Công ty</mat-label>
+        <mat-select [ngModel]="formCompanyId()" (ngModelChange)="formCompanyId.set($event)" name="company">
+          <mat-option [value]="null">— Chưa gán —</mat-option>
+          @for (c of companies(); track c.id) {
+            <mat-option [value]="c.id">{{ companyDisplay(c) }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Phòng ban</mat-label>
+        <mat-select [ngModel]="formDepartmentId()" (ngModelChange)="formDepartmentId.set($event)" name="department">
+          <mat-option [value]="null">—</mat-option>
+          @for (d of departments(); track d.id) {
+            <mat-option [value]="d.id">{{ d.code }} — {{ d.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Quản lý trực tiếp</mat-label>
+        <mat-select [ngModel]="formManagerId()" (ngModelChange)="formManagerId.set($event)" name="manager">
+          <mat-option [value]="null">—</mat-option>
+          @for (m of managersForSelect(); track m.id) {
+            <mat-option [value]="m.id">{{ m.full_name }} ({{ m.employee_code }})</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Giới tính</mat-label>
+        <input matInput [ngModel]="formGender()" (ngModelChange)="formGender.set($event)" name="gender" placeholder="Nam/Nữ/Khác" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Ngày sinh</mat-label>
+        <input matInput [matDatepicker]="pickerDob" [ngModel]="formDateOfBirth()" (ngModelChange)="formDateOfBirth.set($event)" name="dateOfBirth" />
+        <mat-datepicker-toggle matIconSuffix [for]="pickerDob"></mat-datepicker-toggle>
+        <mat-datepicker #pickerDob></mat-datepicker>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>CCCD / CMND</mat-label>
+        <input matInput [ngModel]="formIdNumber()" (ngModelChange)="formIdNumber.set($event)" name="idNumber" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Nơi cấp CCCD</mat-label>
+        <input matInput [ngModel]="formIdIssuePlace()" (ngModelChange)="formIdIssuePlace.set($event)" name="idIssuePlace" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Ngày cấp CCCD</mat-label>
+        <input matInput [matDatepicker]="pickerIdIssue" [ngModel]="formIdIssueDate()" (ngModelChange)="formIdIssueDate.set($event)" name="idIssueDate" />
+        <mat-datepicker-toggle matIconSuffix [for]="pickerIdIssue"></mat-datepicker-toggle>
+        <mat-datepicker #pickerIdIssue></mat-datepicker>
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Địa chỉ</mat-label>
+        <input matInput [ngModel]="formAddress()" (ngModelChange)="formAddress.set($event)" name="address" />
+      </mat-form-field>
+
+      <h3 class="form-section">Hợp đồng & Lao động</h3>
+      <mat-form-field appearance="outline">
+        <mat-label>Loại hình</mat-label>
+        <mat-select [ngModel]="formEmploymentType()" (ngModelChange)="formEmploymentType.set($event)" name="employmentType">
+          @for (o of employmentTypeOptions; track o.value) {
+            <mat-option [value]="o.value">{{ o.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Thời hạn hợp đồng</mat-label>
+        <mat-select [ngModel]="formContractType()" (ngModelChange)="formContractType.set($event)" name="contractType">
+          @for (o of contractTypeOptions; track o.value) {
+            <mat-option [value]="o.value">{{ o.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      @if (formContractType() === 'fixed') {
+        <mat-form-field appearance="outline">
+          <mat-label>Ngày hết hạn HĐ</mat-label>
+          <input matInput [matDatepicker]="pickerContractEnd" [ngModel]="formContractEndDate()" (ngModelChange)="formContractEndDate.set($event)" name="contractEndDate" />
+          <mat-datepicker-toggle matIconSuffix [for]="pickerContractEnd"></mat-datepicker-toggle>
+          <mat-datepicker #pickerContractEnd></mat-datepicker>
+        </mat-form-field>
+      }
+      <mat-form-field appearance="outline">
+        <mat-label>Ngày vào làm</mat-label>
+        <input matInput [matDatepicker]="pickerStart" [ngModel]="formStartDate()" (ngModelChange)="formStartDate.set($event)" name="startDate" />
+        <mat-datepicker-toggle matIconSuffix [for]="pickerStart"></mat-datepicker-toggle>
+        <mat-datepicker #pickerStart></mat-datepicker>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Trạng thái</mat-label>
+        <mat-select [ngModel]="formStatus()" (ngModelChange)="formStatus.set($event)" name="status">
+          @for (o of statusOptions; track o.value) {
+            <mat-option [value]="o.value">{{ o.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Ngày nghỉ việc</mat-label>
+        <input matInput [matDatepicker]="pickerResign" [ngModel]="formResignationDate()" (ngModelChange)="formResignationDate.set($event)" name="resignationDate" />
+        <mat-datepicker-toggle matIconSuffix [for]="pickerResign"></mat-datepicker-toggle>
+        <mat-datepicker #pickerResign></mat-datepicker>
+      </mat-form-field>
+
+      <h3 class="form-section">Thuế & BHXH</h3>
+      <mat-form-field appearance="outline">
+        <mat-label>Mã số thuế (MST)</mat-label>
+        <input matInput [ngModel]="formTaxCode()" (ngModelChange)="formTaxCode.set($event)" name="taxCode" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Số sổ BHXH</mat-label>
+        <input matInput [ngModel]="formSocialInsuranceNumber()" (ngModelChange)="formSocialInsuranceNumber.set($event)" name="socialInsuranceNumber" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Số người phụ thuộc</mat-label>
+        <input matInput type="number" min="0" [ngModel]="formDependentsCount()" (ngModelChange)="formDependentsCount.set(+$event || 0)" name="dependentsCount" />
+      </mat-form-field>
+
+      <h3 class="form-section">Ngân hàng</h3>
+      <mat-form-field appearance="outline">
+        <mat-label>Số tài khoản ngân hàng</mat-label>
+        <input matInput [ngModel]="formBankAccount()" (ngModelChange)="formBankAccount.set($event)" name="bankAccount" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Ngân hàng</mat-label>
+        <input matInput [ngModel]="formBankName()" (ngModelChange)="formBankName.set($event)" name="bankName" />
+      </mat-form-field>
+
+      <h3 class="form-section">Liên hệ khẩn cấp</h3>
+      <mat-form-field appearance="outline">
+        <mat-label>Họ tên người liên hệ</mat-label>
+        <input matInput [ngModel]="formEmergencyContactName()" (ngModelChange)="formEmergencyContactName.set($event)" name="emergencyContactName" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>SĐT người liên hệ</mat-label>
+        <input matInput [ngModel]="formEmergencyContactPhone()" (ngModelChange)="formEmergencyContactPhone.set($event)" name="emergencyContactPhone" />
+      </mat-form-field>
+
+      <h3 class="form-section">Người phụ thuộc</h3>
+      <p class="hint">Số người phụ thuộc ở trên (Thuế & BHXH) dùng để tính giảm trừ; có thể cập nhật theo danh sách bên dưới.</p>
+      <div class="dependents-actions">
+        <button mat-button type="button" (click)="openAddDependent()" [disabled]="showAddDependent()">Thêm người phụ thuộc</button>
+      </div>
+      @if (showAddDependent()) {
+        <div class="dependent-form">
+          <mat-form-field appearance="outline">
+            <mat-label>Họ tên</mat-label>
+            <input matInput [ngModel]="addDepName()" (ngModelChange)="addDepName.set($event)" [ngModelOptions]="{standalone: true}" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Quan hệ</mat-label>
+            <mat-select [ngModel]="addDepRelationship()" (ngModelChange)="addDepRelationship.set($event)" [ngModelOptions]="{standalone: true}">
+              @for (r of relationshipOptions; track r.value) {
+                <mat-option [value]="r.value">{{ r.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Năm sinh</mat-label>
+            <input matInput type="number" [ngModel]="addDepBirthYear()" (ngModelChange)="addDepBirthYear.set($event === '' || $event == null ? null : +$event)" [ngModelOptions]="{standalone: true}" placeholder="VD: 1990" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>CCCD/CMND</mat-label>
+            <input matInput [ngModel]="addDepIdNumber()" (ngModelChange)="addDepIdNumber.set($event)" [ngModelOptions]="{standalone: true}" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Ghi chú</mat-label>
+            <input matInput [ngModel]="addDepNote()" (ngModelChange)="addDepNote.set($event)" [ngModelOptions]="{standalone: true}" />
+          </mat-form-field>
+          <button mat-button type="button" (click)="closeAddDependent()">Hủy</button>
+          <button mat-flat-button color="primary" type="button" (click)="submitAddDependent()" [disabled]="addDepSubmitting()">Thêm</button>
+        </div>
+      }
+      <ul class="dependents-list">
+        @for (d of dependents(); track d.id) {
+          <li class="dependent-item">
+            @if (editDepId() === d.id) {
+              <div class="dependent-form">
+                <mat-form-field appearance="outline">
+                  <mat-label>Họ tên</mat-label>
+                  <input matInput [ngModel]="editDepName()" (ngModelChange)="editDepName.set($event)" [ngModelOptions]="{standalone: true}" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Quan hệ</mat-label>
+                  <mat-select [ngModel]="editDepRelationship()" (ngModelChange)="editDepRelationship.set($event)" [ngModelOptions]="{standalone: true}">
+                    @for (r of relationshipOptions; track r.value) {
+                      <mat-option [value]="r.value">{{ r.label }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Năm sinh</mat-label>
+                  <input matInput type="number" [ngModel]="editDepBirthYear()" (ngModelChange)="editDepBirthYear.set($event === '' || $event == null ? null : +$event)" [ngModelOptions]="{standalone: true}" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>CCCD/CMND</mat-label>
+                  <input matInput [ngModel]="editDepIdNumber()" (ngModelChange)="editDepIdNumber.set($event)" [ngModelOptions]="{standalone: true}" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Ghi chú</mat-label>
+                  <input matInput [ngModel]="editDepNote()" (ngModelChange)="editDepNote.set($event)" [ngModelOptions]="{standalone: true}" />
+                </mat-form-field>
+                <button mat-button type="button" (click)="cancelEditDependent()">Hủy</button>
+                <button mat-flat-button color="primary" type="button" (click)="submitEditDependent()" [disabled]="editDepSubmitting()">Lưu</button>
+              </div>
+            } @else {
+              <span class="dep-name">{{ d.full_name }}</span>
+              <span class="dep-relation">{{ d.relationship }}</span>
+              @if (d.birth_year) { <span class="dep-year">{{ d.birth_year }}</span> }
+              <button mat-button type="button" (click)="openEditDependent(d)">Sửa</button>
+              <button mat-button type="button" color="warn" (click)="deleteDependent(d)">Xóa</button>
+            }
+          </li>
+        }
+      </ul>
+      @if (dependents().length === 0 && !showAddDependent()) {
+        <p class="muted-inline">Chưa có người phụ thuộc.</p>
+      }
+
+      @if (formError()) {
+        <p class="error-msg">{{ formError() }}</p>
+      }
+      <div class="form-actions">
+        <button mat-button type="button" (click)="cancelEdit()">Hủy</button>
+        <button mat-flat-button color="primary" type="submit" [disabled]="formSaving()">Lưu</button>
+      </div>
+    </form>
+  </div>
+}
+
+<div class="ml-card">
+  <p class="ml-card-title">Danh sách nhân viên</p>
+  <p class="card-actions">
+    <button mat-button type="button" (click)="syncEmailsFromAuth()" [disabled]="syncEmailInProgress() || loading()">
+      {{ syncEmailInProgress() ? 'Đang đồng bộ...' : 'Đồng bộ email từ đăng nhập' }}
+    </button>
+    @if (syncEmailMessage()) {
+      <span class="sync-msg" [class.err]="syncEmailMessage()?.startsWith('Lỗi')">{{ syncEmailMessage() }}</span>
+    }
+  </p>
+  @if (loading()) {
+    <p class="muted">Đang tải...</p>
+  } @else {
+    <div class="table-wrap">
+      <table class="emp-table">
+        <thead>
+          <tr>
+            <th>Mã NV</th>
+            <th>Họ tên</th>
+            <th>SĐT</th>
+            <th>Email</th>
+            <th>Vai trò</th>
+            <th>Quản lý trực tiếp</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (e of list(); track e.id) {
+            <tr>
+              <td>{{ e.employee_code }}</td>
+              <td>{{ e.full_name }}</td>
+              <td>{{ e.phone ?? '—' }}</td>
+              <td>{{ e.email ?? '—' }}</td>
+              <td>{{ roleLabel(e.role) }}</td>
+              <td>{{ managerName(e) }}</td>
+              <td>
+                <button mat-button type="button" (click)="startEdit(e)">Sửa</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (list().length === 0) {
+      <p class="muted">Chưa có nhân viên.</p>
+    }
+  }
+</div>

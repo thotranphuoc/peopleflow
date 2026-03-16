@@ -1,0 +1,41 @@
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-end;
+}
+
+.table-wrap {
+  margin-top: 1rem;
+  max-height: 480px;
+  overflow: auto;
+}
+
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.report-table th,
+.report-table td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 0.875rem;
+  vertical-align: top;
+}
+
+.cell-main {
+  font-weight: 600;
+}
+
+.note-cell {
+  max-width: 220px;
+  white-space: pre-wrap;
+}
+
+.muted {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin-top: 0.75rem;
+}
+

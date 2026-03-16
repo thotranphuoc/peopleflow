@@ -1,0 +1,164 @@
+<h1 class="page-header page-header--hide-on-mobile">Nghỉ phép</h1>
+
+<div class="ml-card balance-card">
+  <p class="ml-card-title">Quỹ phép năm {{ currentYear }}</p>
+  @if (loading()) {
+    <p class="muted">Đang tải...</p>
+  } @else if (balance(); as b) {
+    <div class="balance-row">
+      <span class="balance-label">Còn lại:</span>
+      <span class="balance-value">{{ balanceDays() }}</span>
+    </div>
+    <p class="balance-hint">Tổng {{ b.total_minutes / 480 | number:'1.1-1' }} ngày, đã dùng {{ b.used_minutes / 480 | number:'1.1-1' }} ngày. Ngày lễ không trừ phép.</p>
+  } @else {
+    <p class="muted">Chưa có quỹ phép năm {{ currentYear }}. Liên hệ HR để được cấp.</p>
+  }
+</div>
+
+@if (isManager()) {
+  <div class="ml-card section-card pending-section">
+    <p class="ml-card-title">Đơn chờ duyệt</p>
+    @if (leaveService.loading()) {
+      <p class="muted">Đang tải...</p>
+    } @else if (pendingList().length === 0) {
+      <p class="muted">Không có đơn chờ duyệt.</p>
+    } @else {
+      <div class="pending-cards">
+        @for (r of pendingList(); track r.id) {
+          <div class="pending-card">
+            <div class="pending-card-header">
+              <div class="pending-emp">
+                <span class="pending-emp-name">{{ $any(r).full_name || 'Nhân viên' }}</span>
+                <span class="pending-emp-code">{{ $any(r).employee_code ? '(' + $any(r).employee_code + ')' : '' }}</span>
+              </div>
+              @if ($any(r).department_name) {
+                <span class="pending-dept">{{ $any(r).department_name }}</span>
+              }
+            </div>
+            <div class="pending-card-body">
+              <div class="pending-row">
+                <span class="pending-label">Loại nghỉ:</span>
+                <span class="pending-value">{{ requestLabel(r) }}</span>
+              </div>
+              <div class="pending-row">
+                <span class="pending-label">Số ngày:</span>
+                <span class="pending-value">{{ leaveDaysLabel(r) }}</span>
+              </div>
+              <div class="pending-row">
+                <span class="pending-label">Thời gian:</span>
+                <span class="pending-value">{{ r.start_time | date:'dd/MM/yyyy HH:mm' }} → {{ r.end_time | date:'dd/MM/yyyy HH:mm' }}</span>
+              </div>
+              @if (r.deduct_annual_leave) {
+                <div class="pending-row">
+                  <span class="pending-badge">Trừ phép năm</span>
+                </div>
+              }
+              @if (r.reason) {
+                <div class="pending-reason">
+                  <span class="pending-label">Lý do:</span>
+                  <span class="pending-reason-text">{{ r.reason }}</span>
+                </div>
+              }
+            </div>
+            <div class="pending-card-actions">
+              <button type="button" class="btn-approve" (click)="approve(r.id)">Duyệt</button>
+              <button type="button" class="btn-reject" (click)="reject(r.id)">Từ chối</button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+}
+
+<div class="ml-card section-card">
+  <p class="ml-card-title">Đơn của tôi</p>
+  <button mat-flat-button color="primary" (click)="openCreate()">Tạo đơn</button>
+
+  @if (showCreateForm()) {
+    <div class="create-form">
+      <mat-form-field appearance="outline">
+        <mat-label>Loại đơn</mat-label>
+        <mat-select [ngModel]="createLeaveType()" (ngModelChange)="createLeaveType.set($event)">
+          @for (t of leaveTypeOptions(); track t) {
+            <mat-option [value]="t">{{ leaveTypeLabels()[t] }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      @if (showDurationField()) {
+        <mat-form-field appearance="outline">
+          <mat-label>Hình thức</mat-label>
+          <mat-select [ngModel]="createDuration()" (ngModelChange)="createDuration.set($event)">
+            @for (k of durationLabels | keyvalue; track k.key) {
+              <mat-option [value]="k.key">{{ k.value }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      }
+      @if (showDeductAnnualCheckbox()) {
+        <mat-checkbox [ngModel]="createDeductAnnual()" (ngModelChange)="createDeductAnnual.set($event)">
+          Trừ phép năm (để công ty trả lương)
+        </mat-checkbox>
+      }
+      <mat-form-field appearance="outline">
+        <mat-label>Ngày bắt đầu</mat-label>
+        <input matInput [matDatepicker]="pickerStart" [ngModel]="createStartDate()" (ngModelChange)="createStartDate.set($event)" />
+        <mat-datepicker-toggle matIconSuffix [for]="pickerStart"></mat-datepicker-toggle>
+        <mat-datepicker #pickerStart></mat-datepicker>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Giờ bắt đầu</mat-label>
+        <input matInput type="time" [ngModel]="createStartTime()" (ngModelChange)="createStartTime.set($event)" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Ngày kết thúc</mat-label>
+        <input matInput [matDatepicker]="pickerEnd" [ngModel]="createEndDate()" (ngModelChange)="createEndDate.set($event)" />
+        <mat-datepicker-toggle matIconSuffix [for]="pickerEnd"></mat-datepicker-toggle>
+        <mat-datepicker #pickerEnd></mat-datepicker>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Giờ kết thúc</mat-label>
+        <input matInput type="time" [ngModel]="createEndTime()" (ngModelChange)="createEndTime.set($event)" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Lý do</mat-label>
+        <textarea matInput [ngModel]="createReason()" (ngModelChange)="createReason.set($event)" rows="2"></textarea>
+      </mat-form-field>
+      @if (createError()) {
+        <p class="error-msg">{{ createError() }}</p>
+      }
+      <div class="form-actions">
+        <button mat-button (click)="closeCreate()">Hủy</button>
+        <button mat-flat-button color="primary" [disabled]="createSubmitting()" (click)="submitCreate()">
+          Gửi đơn
+        </button>
+      </div>
+    </div>
+  }
+
+  @if (loading()) {
+    <p class="muted">Đang tải...</p>
+  } @else {
+    <ul class="request-list">
+      @for (r of list(); track r.id) {
+        <li class="request-card">
+          <div class="request-type">{{ requestLabel(r) }}</div>
+          <div class="request-dates">
+            <span class="request-from">{{ r.start_time | date:'d/M/yy, HH:mm' }}</span>
+            <span class="request-sep">→</span>
+            <span class="request-to">{{ r.end_time | date:'d/M/yy, HH:mm' }}</span>
+          </div>
+          <div class="request-footer">
+            <span [class]="'request-status status-' + r.status">{{ statusLabels[r.status] }}</span>
+            @if (r.manager_note) {
+              <span class="request-note">Ghi chú: {{ r.manager_note }}</span>
+            }
+          </div>
+        </li>
+      }
+    </ul>
+    @if (list().length === 0) {
+      <p class="muted">Chưa có đơn nào.</p>
+    }
+  }
+</div>

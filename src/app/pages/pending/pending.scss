@@ -1,0 +1,42 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  background: var(--ml-bg);
+}
+
+.pending-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 1.5rem;
+}
+
+.pending-card {
+  width: 100%;
+  max-width: min(420px, 92vw);
+}
+
+.pending-message {
+  color: var(--ml-text);
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.pending-hint {
+  color: var(--ml-text-muted);
+  font-size: 0.9375rem;
+  margin-bottom: 1.25rem;
+}
+
+.back-link {
+  margin-top: 1rem;
+  font-size: 0.875rem;
+}
+.back-link a {
+  color: var(--ml-primary);
+  text-decoration: none;
+}
+.back-link a:hover {
+  text-decoration: underline;
+}

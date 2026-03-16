@@ -1,0 +1,71 @@
+:host { display: block; }
+
+.edit-card {
+  margin-bottom: 1.25rem;
+}
+
+.hint {
+  font-size: 0.8125rem;
+  color: var(--ml-text-muted);
+  margin: 0 0 0.75rem;
+}
+
+.form-section {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ml-text-muted);
+  margin: 1rem 0 0.5rem;
+  width: 100%;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--ml-border);
+}
+
+.form-section:first-of-type {
+  margin-top: 0;
+}
+
+.edit-form {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  max-width: 900px;
+}
+
+.edit-form mat-form-field { min-width: 200px; }
+.edit-form mat-form-field.full-width { width: 100%; min-width: 100%; max-width: 100%; }
+
+.edit-form .form-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.error-msg {
+  color: var(--ml-error);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.table-wrap { overflow-x: auto; margin-top: 0.5rem; }
+.emp-table { width: 100%; border-collapse: collapse; font-size: 0.9375rem; }
+.emp-table th, .emp-table td { padding: 0.5rem 0.75rem; text-align: left; border-bottom: 1px solid var(--ml-border); }
+.emp-table th { color: var(--ml-text-muted); font-weight: 600; }
+.emp-table td:last-child { white-space: nowrap; }
+
+.card-actions { display: flex; align-items: center; gap: 0.75rem; margin: -0.25rem 0 0.75rem; flex-wrap: wrap; }
+.card-actions .sync-msg { font-size: 0.875rem; color: var(--ml-text-muted); }
+.card-actions .sync-msg.err { color: var(--ml-error, #b71c1c); }
+
+.muted { color: var(--ml-text-muted); font-size: 0.9375rem; }
+
+.dependents-actions { margin-bottom: 0.5rem; }
+.dependent-form { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.75rem; }
+.dependent-form mat-form-field { max-width: 180px; }
+.dependents-list { list-style: none; padding: 0; margin: 0; }
+.dependent-item { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; padding: 0.5rem 0; border-bottom: 1px solid var(--ml-border); }
+.dep-name { font-weight: 500; }
+.dep-relation { color: var(--ml-text-muted); font-size: 0.875rem; }
+.dep-year { font-size: 0.875rem; }
+.muted-inline { color: var(--ml-text-muted); font-size: 0.875rem; margin: 0.5rem 0 0; }

@@ -1,0 +1,49 @@
+<h1 class="page-header">Tổng quan Admin</h1>
+<p class="back-link"><a routerLink="/admin">← Quản trị</a></p>
+
+@if (loading()) {
+  <p class="muted">Đang tải...</p>
+} @else {
+  <div class="stats-grid">
+    <div class="ml-card stat-card">
+      <p class="ml-card-title">Nhân viên</p>
+      <p class="stat-value">{{ stats()?.employeeCount ?? 0 }}</p>
+      <a routerLink="/admin/employees" class="stat-link">Hồ sơ nhân sự →</a>
+    </div>
+    <div class="ml-card stat-card">
+      <p class="ml-card-title">Phòng ban</p>
+      <p class="stat-value">{{ stats()?.departmentCount ?? 0 }}</p>
+      <a routerLink="/admin/departments" class="stat-link">Quản lý phòng ban →</a>
+    </div>
+    <div class="ml-card stat-card stat-warning">
+      <p class="ml-card-title">Đơn chờ duyệt</p>
+      <p class="stat-value">{{ stats()?.pendingLeaveCount ?? 0 }}</p>
+      <p class="stat-desc">toàn công ty</p>
+      <a routerLink="/leave" class="stat-link">Xem đơn từ →</a>
+    </div>
+    <div class="ml-card stat-card">
+      <p class="ml-card-title">Phiếu lương tháng này (nháp)</p>
+      <p class="stat-value">{{ stats()?.payrollDraftCountThisMonth ?? 0 }}</p>
+      <a routerLink="/admin/payrolls" class="stat-link">Tạo phiếu lương →</a>
+    </div>
+    <div class="ml-card stat-card">
+      <p class="ml-card-title">Phiếu lương đã công bố (tháng này)</p>
+      <p class="stat-value">{{ stats()?.payrollPublishedCountThisMonth ?? 0 }}</p>
+      <a routerLink="/admin/payrolls" class="stat-link">Quản lý phiếu lương →</a>
+    </div>
+  </div>
+  <div class="ml-card quick-links">
+    <p class="ml-card-title">Thao tác nhanh</p>
+    <div class="link-list">
+      <a routerLink="/admin/pending-users">Người chờ gán vai trò</a>
+      <a routerLink="/admin/leave-balances">Quỹ phép năm</a>
+      <a routerLink="/admin/payroll-config">Cấu hình lương</a>
+      <a routerLink="/admin/tax-config">Cấu hình thuế</a>
+      <a routerLink="/admin/holidays">Ngày lễ</a>
+      <a routerLink="/admin/leave-types">Loại nghỉ phép</a>
+      <a routerLink="/admin/work-schedule">Lịch làm việc</a>
+      <a routerLink="/admin/reports/attendance">Báo cáo chấm công</a>
+      <a routerLink="/admin/reports/leave">Báo cáo nghỉ phép</a>
+    </div>
+  </div>
+}

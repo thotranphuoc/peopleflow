@@ -1,0 +1,106 @@
+<h1 class="page-header">Mức lương (bậc lương)</h1>
+<p class="back-link"><a routerLink="/admin">← Quản trị</a></p>
+
+<div class="ml-card">
+  <p class="ml-card-title">Danh sách mức lương</p>
+  <p class="hint">Định nghĩa các bậc lương P1, P2, P3. Khi thêm/sửa Cấu hình lương có thể chọn mức để tự điền P1, P2, P3.</p>
+  @if (message()) {
+    <p class="message" [class.error]="message()?.startsWith('Lỗi')">{{ message() }}</p>
+  }
+  <header class="card-header">
+    <button mat-flat-button color="primary" (click)="openAdd()">Thêm mức lương</button>
+  </header>
+
+  @if (showAddForm()) {
+    <div class="form-block">
+      <mat-form-field appearance="outline">
+        <mat-label>Tên mức</mat-label>
+        <input matInput [ngModel]="addName()" (ngModelChange)="addName.set($event)" placeholder="VD: Bậc 1, Senior..." />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>P1 (lương cơ bản)</mat-label>
+        <input matInput type="number" [ngModel]="addP1()" (ngModelChange)="addP1.set(+$event || 0)" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>P2 (phụ cấp)</mat-label>
+        <input matInput type="number" [ngModel]="addP2()" (ngModelChange)="addP2.set(+$event || 0)" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>P3 (theo tháng)</mat-label>
+        <input matInput type="number" [ngModel]="addP3()" (ngModelChange)="addP3.set(+$event || 0)" />
+      </mat-form-field>
+      <div class="form-actions">
+        <button mat-button (click)="closeAdd()">Hủy</button>
+        <button mat-flat-button color="primary" [disabled]="addSubmitting()" (click)="submitAdd()">Thêm</button>
+      </div>
+      @if (addError()) {
+        <p class="error-msg">{{ addError() }}</p>
+      }
+    </div>
+  }
+
+  @if (loading()) {
+    <p class="muted">Đang tải...</p>
+  } @else {
+    <div class="table-wrap">
+      <table class="config-table">
+        <thead>
+          <tr>
+            <th>Tên mức</th>
+            <th class="num">P1</th>
+            <th class="num">P2</th>
+            <th class="num">P3</th>
+            <th class="col-actions"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of list(); track row.id) {
+            <tr [class.editing]="editId() === row.id">
+              @if (editId() === row.id) {
+                <td colspan="5" class="edit-cell">
+                  <div class="edit-form">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Tên mức</mat-label>
+                      <input matInput [ngModel]="editName()" (ngModelChange)="editName.set($event)" />
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>P1</mat-label>
+                      <input matInput type="number" [ngModel]="editP1()" (ngModelChange)="editP1.set(+$event || 0)" />
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>P2</mat-label>
+                      <input matInput type="number" [ngModel]="editP2()" (ngModelChange)="editP2.set(+$event || 0)" />
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>P3</mat-label>
+                      <input matInput type="number" [ngModel]="editP3()" (ngModelChange)="editP3.set(+$event || 0)" />
+                    </mat-form-field>
+                    <div class="form-actions">
+                      <button mat-button (click)="cancelEdit()">Hủy</button>
+                      <button mat-flat-button color="primary" [disabled]="editSubmitting()" (click)="submitEdit()">Lưu</button>
+                    </div>
+                    @if (editError()) {
+                      <p class="error-msg">{{ editError() }}</p>
+                    }
+                  </div>
+                </td>
+              } @else {
+                <td>{{ row.name }}</td>
+                <td class="num">{{ row.p1_salary | number:'1.0-0' }}</td>
+                <td class="num">{{ row.p2_salary | number:'1.0-0' }}</td>
+                <td class="num">{{ row.p3_salary | number:'1.0-0' }}</td>
+                <td class="col-actions">
+                  <button mat-button (click)="openEdit(row)">Sửa</button>
+                  <button mat-button color="warn" (click)="deleteGrade(row)">Xóa</button>
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (list().length === 0) {
+      <p class="muted">Chưa có mức lương. Bấm "Thêm mức lương" để thêm.</p>
+    }
+  }
+</div>

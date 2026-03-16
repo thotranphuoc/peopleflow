@@ -1,0 +1,185 @@
+<h1 class="page-header">Cấu hình thuế TNCN</h1>
+<p class="back-link"><a routerLink="/admin">← Quản trị</a></p>
+
+<div class="ml-card preview-card">
+  <p class="ml-card-title">Tính thuế mẫu</p>
+  <p class="hint">Nhập thu nhập gộp (trước BHXH), % BHXH và số người phụ thuộc. Hệ thống tính BHXH, giảm trừ (bản thân + phụ thuộc), thu nhập chịu thuế rồi phân bổ theo bậc.</p>
+  <div class="preview-form">
+    <mat-form-field appearance="outline">
+      <mat-label>Thu nhập gộp / trước BHXH (đồng)</mat-label>
+      <input matInput type="number" [ngModel]="previewGross()" (ngModelChange)="previewGross.set(+$event || 0)" />
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>% BHXH</mat-label>
+      <input matInput type="number" step="0.1" [ngModel]="previewInsuranceRate()" (ngModelChange)="previewInsuranceRate.set(+$event || 0)" />
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Số người phụ thuộc</mat-label>
+      <input matInput type="number" [ngModel]="previewDependents()" (ngModelChange)="previewDependents.set(+$event || 0)" />
+    </mat-form-field>
+    <button mat-flat-button color="primary" (click)="runPreview()" [disabled]="loading() || previewGross() <= 0">Tính</button>
+  </div>
+  @if (previewComputed(); as c) {
+    <div class="preview-summary">
+      <p><strong>Thu nhập gộp:</strong> {{ previewGross() | number:'1.0-0' }} đ &nbsp;→&nbsp; <strong>BHXH ({{ previewInsuranceRate() }}%):</strong> {{ c.insurance | number:'1.0-0' }} đ &nbsp;|&nbsp; <strong>Giảm trừ bản thân:</strong> {{ c.selfDed | number:'1.0-0' }} đ &nbsp;|&nbsp; <strong>Giảm trừ phụ thuộc ({{ previewDependents() }} người):</strong> {{ c.depDedTotal | number:'1.0-0' }} đ</p>
+      <p><strong>Thu nhập chịu thuế:</strong> {{ c.taxable | number:'1.0-0' }} đ &nbsp;|&nbsp; <strong>Tổng thuế:</strong> {{ previewTotalTax() | number:'1.0-0' }} đ</p>
+    </div>
+  }
+  @if (previewComputed() && previewComputed()!.taxable <= 0 && previewGross() > 0) {
+    <p class="muted">Thu nhập chịu thuế ≤ 0 (sau trừ BHXH và giảm trừ), không phát sinh thuế.</p>
+  }
+  @if (previewBreakdown().length > 0) {
+    <div class="table-wrap">
+      <table class="config-table preview-table">
+        <thead>
+          <tr>
+            <th>Bậc</th>
+            <th class="num">Từ (đồng)</th>
+            <th class="num">Đến (đồng)</th>
+            <th class="num">Thuế suất</th>
+            <th class="num">Thu nhập trong bậc</th>
+            <th class="num">Thuế bậc</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of previewBreakdown(); track r.bracket.id) {
+            <tr>
+              <td>{{ r.bracket.sort_order }}</td>
+              <td class="num">{{ r.bracket.amount_from | number:'1.0-0' }}</td>
+              <td class="num">{{ r.bracket.amount_to == null ? '∞' : (r.bracket.amount_to | number:'1.0-0') }}</td>
+              <td class="num">{{ r.bracket.rate_percent }}%</td>
+              <td class="num">{{ r.incomeInBracket | number:'1.0-0' }}</td>
+              <td class="num">{{ r.taxInBracket | number:'1.0-0' }}</td>
+            </tr>
+          }
+        </tbody>
+        <tfoot>
+          <tr class="total-row">
+            <td colspan="4"><strong>Tổng</strong></td>
+            <td class="num"><strong>{{ previewTotalIncomeInBrackets() | number:'1.0-0' }}</strong></td>
+            <td class="num"><strong>{{ previewTotalTax() | number:'1.0-0' }}</strong></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  }
+</div>
+
+<div class="ml-card">
+  <p class="ml-card-title">Giảm trừ (đồng/tháng)</p>
+  <p class="hint">Dùng để tính thu nhập chịu thuế = Thu nhập gộp − BHXH − Giảm trừ bản thân − (Số người phụ thuộc × Mức giảm người phụ thuộc).</p>
+  @if (message()) {
+    <p class="message" [class.error]="message()?.startsWith('Lỗi')">{{ message() }}</p>
+  }
+  @if (loading()) {
+    <p class="muted">Đang tải...</p>
+  } @else {
+    <div class="deductions-list">
+      @for (d of deductions(); track d.id) {
+        <div class="deduction-row">
+          @if (editDeductionId() === d.id) {
+            <div class="edit-inline">
+              <mat-form-field appearance="outline">
+                <mat-label>Tên</mat-label>
+                <input matInput [ngModel]="editDeductionName()" (ngModelChange)="editDeductionName.set($event)" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Số tiền/tháng (đồng)</mat-label>
+                <input matInput type="number" [ngModel]="editDeductionAmount()" (ngModelChange)="editDeductionAmount.set(+$event || 0)" />
+              </mat-form-field>
+              <button mat-button (click)="cancelEditDeduction()">Hủy</button>
+              <button mat-flat-button color="primary" [disabled]="deductionSaving()" (click)="saveDeduction()">Lưu</button>
+            </div>
+          } @else {
+            <span class="deduction-name">{{ d.name }}</span>
+            <span class="deduction-amount">{{ d.amount_monthly | number:'1.0-0' }} đ/tháng</span>
+            <button mat-button (click)="openEditDeduction(d)">Sửa</button>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<div class="ml-card">
+  <p class="ml-card-title">Bậc thuế lũy tiến</p>
+  <p class="hint">Thu nhập chịu thuế (đồng) theo từng bậc, thuế suất %. Bậc cuối có thể để "Đến" trống (∞).</p>
+  <header class="card-header">
+    <button mat-flat-button color="primary" (click)="openAddBracket()">Thêm bậc thuế</button>
+  </header>
+  @if (showAddBracket()) {
+    <div class="form-block">
+      <mat-form-field appearance="outline">
+        <mat-label>Thứ tự</mat-label>
+        <input matInput type="number" [ngModel]="addOrder()" (ngModelChange)="addOrder.set(+$event || 0)" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Từ (đồng)</mat-label>
+        <input matInput type="number" [ngModel]="addFrom()" (ngModelChange)="addFrom.set(+$event || 0)" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Đến (đồng, trống = ∞)</mat-label>
+        <input matInput type="number" [ngModel]="addTo() ?? ''" (ngModelChange)="addTo.set($event === '' || $event == null ? null : +$event)" placeholder="Trống" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Thuế suất %</mat-label>
+        <input matInput type="number" step="0.01" [ngModel]="addRate()" (ngModelChange)="addRate.set(+$event || 0)" />
+      </mat-form-field>
+      <button mat-button (click)="cancelAddBracket()">Hủy</button>
+      <button mat-flat-button color="primary" [disabled]="addSaving()" (click)="submitAddBracket()">Thêm</button>
+    </div>
+  }
+  <div class="table-wrap">
+    <table class="config-table">
+      <thead>
+        <tr>
+          <th>Thứ tự</th>
+          <th class="num">Từ (đồng)</th>
+          <th class="num">Đến (đồng)</th>
+          <th class="num">Thuế suất %</th>
+          <th class="col-actions"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (b of brackets(); track b.id) {
+          <tr>
+            @if (editBracketId() === b.id) {
+              <td colspan="5" class="edit-cell">
+                <mat-form-field appearance="outline">
+                  <mat-label>Thứ tự</mat-label>
+                  <input matInput type="number" [ngModel]="editBracketOrder()" (ngModelChange)="editBracketOrder.set(+$event || 0)" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Từ</mat-label>
+                  <input matInput type="number" [ngModel]="editBracketFrom()" (ngModelChange)="editBracketFrom.set(+$event || 0)" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Đến (trống = ∞)</mat-label>
+                  <input matInput type="number" [ngModel]="editBracketTo() ?? ''" (ngModelChange)="editBracketTo.set($event === '' || $event == null ? null : +$event)" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Thuế suất %</mat-label>
+                  <input matInput type="number" step="0.01" [ngModel]="editBracketRate()" (ngModelChange)="editBracketRate.set(+$event || 0)" />
+                </mat-form-field>
+                <button mat-button (click)="cancelEditBracket()">Hủy</button>
+                <button mat-flat-button color="primary" [disabled]="bracketSaving()" (click)="saveBracket()">Lưu</button>
+              </td>
+            } @else {
+              <td>{{ b.sort_order }}</td>
+              <td class="num">{{ b.amount_from | number:'1.0-0' }}</td>
+              <td class="num">{{ b.amount_to == null ? '∞' : (b.amount_to | number:'1.0-0') }}</td>
+              <td class="num">{{ b.rate_percent }}%</td>
+              <td class="col-actions">
+                <button mat-button (click)="openEditBracket(b)">Sửa</button>
+                <button mat-button color="warn" (click)="deleteBracket(b)">Xóa</button>
+              </td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  @if (!loading() && brackets().length === 0) {
+    <p class="muted">Chưa có bậc thuế. Chạy migration 14-tax-config.sql hoặc thêm bậc thuế.</p>
+  }
+</div>

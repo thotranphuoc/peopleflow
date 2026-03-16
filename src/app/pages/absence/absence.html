@@ -1,0 +1,132 @@
+<h1 class="page-header page-header--hide-on-mobile">Báo vắng</h1>
+<p class="page-hint">Báo cáo khi đi công tác, gặp đối tác hoặc vắng mặt khỏi văn phòng.</p>
+
+<div class="ml-card section-card">
+  <p class="ml-card-title">Báo vắng của tôi</p>
+  <button mat-flat-button color="primary" (click)="openCreate()">Tạo báo vắng</button>
+
+  @if (showCreateForm()) {
+    <div class="create-form">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Lý do / Mục đích</mat-label>
+        <input matInput [ngModel]="createReason()" (ngModelChange)="createReason.set($event)" placeholder="VD: Gặp đối tác ABC" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Địa điểm / Nơi đến</mat-label>
+        <input matInput [ngModel]="createLocation()" (ngModelChange)="createLocation.set($event)" placeholder="VD: VP đối tác ABC" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Ngày</mat-label>
+        <input matInput [matDatepicker]="pickerDate" [ngModel]="createDate()" (ngModelChange)="createDate.set($event)" />
+        <mat-datepicker-toggle matIconSuffix [for]="pickerDate"></mat-datepicker-toggle>
+        <mat-datepicker #pickerDate></mat-datepicker>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Giờ bắt đầu</mat-label>
+        <input matInput type="time" [ngModel]="createStartTime()" (ngModelChange)="createStartTime.set($event)" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Giờ kết thúc</mat-label>
+        <input matInput type="time" [ngModel]="createEndTime()" (ngModelChange)="createEndTime.set($event)" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Thành viên cùng đi</mat-label>
+        <mat-select multiple [ngModel]="createMemberIds()" (ngModelChange)="createMemberIds.set($event)">
+          @for (emp of employees(); track emp.id) {
+            <mat-option [value]="emp.id">{{ emp.full_name }} ({{ emp.employee_code }})</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Số điện thoại liên hệ (tùy chọn)</mat-label>
+        <input matInput type="tel" [ngModel]="createContactPhone()" (ngModelChange)="createContactPhone.set($event)" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Ghi chú (tùy chọn)</mat-label>
+        <textarea matInput [ngModel]="createNote()" (ngModelChange)="createNote.set($event)" rows="2"></textarea>
+      </mat-form-field>
+      @if (createError()) {
+        <p class="error-msg">{{ createError() }}</p>
+      }
+      <div class="form-actions">
+        <button mat-button (click)="closeCreate()">Hủy</button>
+        <button mat-flat-button color="primary" [disabled]="createSubmitting()" (click)="submitCreate()">
+          Gửi báo vắng
+        </button>
+      </div>
+    </div>
+  }
+
+  @if (loading()) {
+    <p class="muted">Đang tải...</p>
+  } @else {
+    <ul class="report-list">
+      @for (r of myList(); track r.id) {
+        <li class="report-card">
+          <div class="report-reason">{{ r.reason }}</div>
+          @if (r.location) {
+            <div class="report-row"><span class="report-label">Địa điểm:</span> {{ r.location }}</div>
+          }
+          <div class="report-row"><span class="report-label">Thời gian:</span> {{ formatTimeRange(r.start_time, r.end_time) }}</div>
+          <div class="report-row"><span class="report-label">Thành viên:</span> {{ memberNames(r) }}</div>
+          @if (r.contact_phone) {
+            <div class="report-row"><span class="report-label">Liên hệ:</span> {{ r.contact_phone }}</div>
+          }
+        </li>
+      }
+    </ul>
+    @if (myList().length === 0) {
+      <p class="muted">Chưa có báo vắng nào.</p>
+    }
+  }
+</div>
+
+@if (isManager()) {
+  <div class="ml-card section-card">
+    <p class="ml-card-title">Báo vắng team</p>
+    @if (loading()) {
+      <p class="muted">Đang tải...</p>
+    } @else if (managerList().length === 0) {
+      <p class="muted">Không có báo vắng team.</p>
+    } @else {
+      <ul class="report-list">
+        @for (r of managerList(); track r.id) {
+          <li class="report-card">
+            <div class="report-reporter">Người báo: {{ reporterName(r) }}</div>
+            <div class="report-reason">{{ r.reason }}</div>
+            @if (r.location) {
+              <div class="report-row"><span class="report-label">Địa điểm:</span> {{ r.location }}</div>
+            }
+            <div class="report-row"><span class="report-label">Thời gian:</span> {{ formatTimeRange(r.start_time, r.end_time) }}</div>
+            <div class="report-row"><span class="report-label">Thành viên:</span> {{ memberNames(r) }}</div>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+}
+
+@if (isHrOrAdmin()) {
+  <div class="ml-card section-card">
+    <p class="ml-card-title">Tất cả báo vắng</p>
+    @if (loading()) {
+      <p class="muted">Đang tải...</p>
+    } @else if (allList().length === 0) {
+      <p class="muted">Chưa có báo vắng.</p>
+    } @else {
+      <ul class="report-list">
+        @for (r of allList(); track r.id) {
+          <li class="report-card">
+            <div class="report-reporter">Người báo: {{ reporterName(r) }}</div>
+            <div class="report-reason">{{ r.reason }}</div>
+            @if (r.location) {
+              <div class="report-row"><span class="report-label">Địa điểm:</span> {{ r.location }}</div>
+            }
+            <div class="report-row"><span class="report-label">Thời gian:</span> {{ formatTimeRange(r.start_time, r.end_time) }}</div>
+            <div class="report-row"><span class="report-label">Thành viên:</span> {{ memberNames(r) }}</div>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+}

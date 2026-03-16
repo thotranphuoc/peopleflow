@@ -1,0 +1,96 @@
+<h1 class="page-header">Quỹ phép năm</h1>
+<p class="back-link"><a routerLink="/admin">← Quản trị</a></p>
+
+<div class="ml-card">
+  <header class="card-header">
+    <div class="year-row">
+      <span class="year-label">Năm:</span>
+      @for (y of years; track y) {
+        <button
+          type="button"
+          class="year-btn"
+          [class.active]="selectedYear() === y"
+          (click)="loadYear(y)"
+        >
+          {{ y }}
+        </button>
+      }
+    </div>
+    <div class="header-actions">
+      <button
+        mat-flat-button
+        color="primary"
+        [disabled]="!hasDirty() || saving()"
+        (click)="saveAll()"
+      >
+        {{ saving() ? 'Đang lưu...' : 'Lưu thay đổi' }}
+      </button>
+      <button
+        mat-flat-button
+        color="primary"
+        [disabled]="grantBusy()"
+        (click)="grantForYear()"
+      >
+        {{ grantBusy() ? 'Đang xử lý...' : 'Cấp phép năm ' + selectedYear() }}
+      </button>
+    </div>
+  </header>
+  <p class="hint">Sửa cột <strong>Tổng</strong> (cơ bản) và <strong>Bổ sung</strong> (phép 5 năm, 10 năm, chuyển năm trước…), bấm <strong>Lưu thay đổi</strong>. Cấp phép: tạo quỹ mặc định 12 ngày cho nhân viên chưa có.</p>
+  @if (message()) {
+    <p class="message" [class.error]="message()?.startsWith('Lỗi')">{{ message() }}</p>
+  }
+
+  @if (balanceService.loading()) {
+    <p class="muted">Đang tải...</p>
+  } @else {
+    <div class="grid-wrap">
+      <table class="balance-table">
+        <thead>
+          <tr>
+            <th class="col-code">Mã NV</th>
+            <th class="col-name">Họ tên</th>
+            <th class="col-dept">Phòng ban</th>
+            <th class="col-num">Tổng (ngày)</th>
+            <th class="col-num">Bổ sung (ngày)</th>
+            <th class="col-num">Tổng cộng</th>
+            <th class="col-num">Đã dùng</th>
+            <th class="col-num">Còn lại</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of balanceService.rows(); track row.employee_id) {
+            <tr [class.no-balance]="hasNoBalance(row)">
+              <td class="col-code">{{ row.employee_code }}</td>
+              <td class="col-name">{{ row.full_name }}</td>
+              <td class="col-dept">{{ row.department_code ?? '—' }}</td>
+              <td class="col-num col-input">
+                <input
+                  type="text"
+                  class="grid-input"
+                  [value]="inputValue(row)"
+                  (input)="setEdit(row.employee_id, $any($event.target).value)"
+                  placeholder="0"
+                />
+              </td>
+              <td class="col-num col-input">
+                <input
+                  type="text"
+                  class="grid-input"
+                  [value]="extraInputValue(row)"
+                  (input)="setExtraEdit(row.employee_id, $any($event.target).value)"
+                  placeholder="0"
+                />
+              </td>
+              <td class="col-num">{{ totalDays(row) }}</td>
+              <td class="col-num">{{ days(row.used_minutes) }}</td>
+              <td class="col-num">{{ remainingDays(row) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (balanceService.rows().length === 0) {
+      <p class="muted">Chưa có nhân viên nào.</p>
+    }
+  }
+</div>

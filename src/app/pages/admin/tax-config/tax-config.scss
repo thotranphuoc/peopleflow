@@ -1,0 +1,32 @@
+:host { display: block; }
+.back-link { margin: -0.25rem 0 1rem; font-size: 0.875rem; }
+.preview-card { margin-bottom: 1.5rem; }
+.preview-form { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
+.preview-form mat-form-field { max-width: 220px; }
+.preview-summary { margin-bottom: 0.75rem; font-size: 0.9375rem; }
+.preview-table tfoot .total-row { background: var(--ml-bg-secondary, #f5f5f5); font-weight: 600; }
+.preview-table tfoot td { padding: 0.6rem 0.5rem; border-top: 2px solid var(--ml-border); }
+.back-link a { color: var(--ml-text-muted); text-decoration: none; }
+.back-link a:hover { color: var(--ml-primary); text-decoration: underline; }
+.hint { font-size: 0.8125rem; color: var(--ml-text-muted); margin: 0 0 0.75rem; }
+.message { font-size: 0.875rem; margin: 0 0 0.5rem; }
+.message.error { color: var(--ml-error); }
+.muted { color: var(--ml-text-muted); font-size: 0.875rem; margin-top: 0.75rem; }
+.deductions-list { margin-bottom: 1.5rem; }
+.deduction-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0; border-bottom: 1px solid var(--ml-border); }
+.deduction-name { font-weight: 500; min-width: 180px; }
+.deduction-amount { flex: 1; }
+.edit-inline { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.edit-inline mat-form-field { max-width: 200px; }
+.card-header { margin-bottom: 0.75rem; }
+.form-block { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-bottom: 1rem; padding: 0.75rem; background: var(--ml-bg-secondary, #f5f5f5); border-radius: 8px; }
+.form-block mat-form-field { max-width: 140px; }
+.table-wrap { overflow-x: auto; }
+.config-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.config-table th { text-align: left; font-weight: 600; color: var(--ml-text-muted); padding: 0.5rem; border-bottom: 1px solid var(--ml-border); }
+.config-table th.num { text-align: right; }
+.config-table td { padding: 0.5rem; border-bottom: 1px solid var(--ml-border); vertical-align: middle; }
+.config-table td.num { text-align: right; }
+.col-actions { white-space: nowrap; }
+.edit-cell { padding: 0.75rem; background: var(--ml-bg-secondary, #f5f5f5); }
+.edit-cell mat-form-field { max-width: 120px; margin-right: 0.5rem; }

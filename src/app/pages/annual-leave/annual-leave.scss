@@ -1,0 +1,78 @@
+:host {
+  display: block;
+}
+
+.balance-card {
+  margin-bottom: 1rem;
+}
+.balance-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+.balance-label {
+  font-weight: 600;
+  color: var(--ml-text);
+}
+.balance-value {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--ml-primary);
+}
+.balance-hint {
+  font-size: 0.8125rem;
+  color: var(--ml-text-muted);
+  margin: 0.5rem 0 0;
+}
+
+.section-card .ml-card-title {
+  margin-bottom: 0.75rem;
+}
+.create-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 1rem 0;
+  padding: 1rem 0;
+  border-top: 1px solid var(--ml-border);
+}
+.full-width {
+  width: 100%;
+}
+.form-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.error-msg {
+  color: var(--ml-error);
+  font-size: 0.875rem;
+  margin: 0;
+  width: 100%;
+}
+
+.request-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0;
+}
+.request-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--ml-border);
+  font-size: 0.875rem;
+  .type { font-weight: 500; }
+  .status-approved { color: var(--ml-success); }
+  .status-rejected { color: var(--ml-error); }
+  .status-pending { color: var(--ml-warning, #b45309); }
+  .note { color: var(--ml-text-muted); font-size: 0.8125rem; }
+}
+.muted {
+  color: var(--ml-text-muted);
+  font-size: 0.9375rem;
+  margin-top: 1rem;
+}

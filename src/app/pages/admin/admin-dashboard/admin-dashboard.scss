@@ -1,0 +1,15 @@
+:host { display: block; }
+.back-link { margin: -0.25rem 0 1rem; font-size: 0.875rem; }
+.back-link a { color: var(--ml-text-muted); text-decoration: none; }
+.back-link a:hover { color: var(--ml-primary); text-decoration: underline; }
+.muted { color: var(--ml-text-muted); font-size: 0.875rem; }
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.stat-card { min-width: 0; }
+.stat-card .stat-value { font-size: 1.75rem; font-weight: 700; margin: 0.25rem 0; }
+.stat-card .stat-desc { font-size: 0.8125rem; color: var(--ml-text-muted); margin: 0 0 0.25rem; }
+.stat-card .stat-link { font-size: 0.875rem; color: var(--ml-primary); text-decoration: none; }
+.stat-card .stat-link:hover { text-decoration: underline; }
+.stat-warning .stat-value { color: var(--ml-warning, #ed6c02); }
+.quick-links .link-list { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; }
+.quick-links .link-list a { color: var(--ml-primary); text-decoration: none; }
+.quick-links .link-list a:hover { text-decoration: underline; }

@@ -1,0 +1,95 @@
+<h1 class="page-header page-header--hide-on-mobile">Heat map chấm công</h1>
+<p class="hint">Đủ 8h (trừ trưa 12:00–13:30) = xanh, thiếu (&lt;6h) = đỏ, nghỉ phép (P) = xám. Click ô để xem chi tiết.</p>
+
+<div class="ml-card">
+  <div class="view-toggle">
+    <button type="button" [class.active]="viewMode() === 'month'" (click)="setViewMode('month')">Theo tháng</button>
+    <button type="button" [class.active]="viewMode() === 'year'" (click)="setViewMode('year')">Theo năm</button>
+  </div>
+  <div class="filters">
+    @if (viewMode() === 'month') {
+      <select [value]="month()" (change)="changeMonth(+$any($event.target).value)">
+        @for (m of months; track m) {
+          <option [value]="m">Tháng {{ m }}</option>
+        }
+      </select>
+    }
+    <select [value]="year()" (change)="changeYear(+$any($event.target).value)">
+      @for (y of years; track y) {
+        <option [value]="y">{{ y }}</option>
+      }
+    </select>
+  </div>
+  <div class="legend">
+    <span class="l l-ok">Đủ 8h</span>
+    <span class="l l-mid">6h–8h</span>
+    <span class="l l-bad">Thiếu (&lt;6h)</span>
+    <span class="l l-leave">Nghỉ phép</span>
+    <span class="l l-empty">Chưa có</span>
+  </div>
+  @if (loading()) {
+    <p class="muted">Đang tải...</p>
+  } @else if (viewMode() === 'month') {
+    <div class="heat-month">
+      <div class="weekday-row">
+        @for (w of weekdayLabels; track w) {
+          <div class="weekday-cell">{{ w }}</div>
+        }
+      </div>
+      @for (row of monthGrid(); track $index) {
+        <div class="week-row">
+          @for (day of row; track day?.date ?? $index) {
+            <div
+              class="day-cell"
+              [class.leave-cell]="day?.isLeave"
+              [style.background]="cellColor(day)"
+              [title]="cellTitle(day)"
+              (click)="onDayClick(day, $event)"
+            >
+              @if (day?.date) {
+                <div class="day-lines">
+                  <span class="day-line line1">{{ day?.date?.slice(8, 10) }}{{ day?.isLeave ? ' P' : ' · ' + formatDayHours(day) }}</span>
+                  @if (!day?.isLeave) {
+                    <span class="day-line line2">{{ formatPenalty(day) }}</span>
+                    <span class="day-line line3">{{ formatLeaveType(day) }}</span>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="heat-year">
+      <div class="weekday-row year">
+        @for (w of weekdayLabels; track w) {
+          <div class="weekday-cell">{{ w }}</div>
+        }
+      </div>
+      @for (row of yearGrid(); track $index) {
+        <div class="week-row year">
+          @for (day of row; track day?.date ?? $index) {
+            <div
+              class="day-cell year"
+              [class.leave-cell]="day?.isLeave"
+              [style.background]="cellColor(day)"
+              [title]="cellTitle(day)"
+              (click)="onDayClick(day, $event)"
+            >
+              @if (day) {
+                <div class="day-lines">
+                  <span class="day-line line1">{{ day.date ? day.date.slice(8, 10) + (day.isLeave ? ' P' : ' · ' + formatDayHours(day)) : '' }}</span>
+                  @if (!day.isLeave) {
+                    <span class="day-line line2">{{ formatPenalty(day) }}</span>
+                    <span class="day-line line3">{{ formatLeaveType(day) }}</span>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

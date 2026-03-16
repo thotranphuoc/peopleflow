@@ -1,0 +1,27 @@
+<h1 class="page-header page-header--hide-on-mobile">Thông báo</h1>
+
+<div class="ml-card">
+  <div class="notif-header">
+    <p class="ml-card-title">Danh sách thông báo</p>
+    @if (list().length > 0 && list().some(n => !n.read_at)) {
+      <button type="button" class="link-btn" (click)="markAllRead()">Đánh dấu tất cả đã đọc</button>
+    }
+  </div>
+  @if (loading()) {
+    <p class="muted">Đang tải...</p>
+  } @else if (list().length === 0) {
+    <p class="muted">Chưa có thông báo.</p>
+  } @else {
+    <ul class="notif-list">
+      @for (n of list(); track n.id) {
+        <li class="notif-item" [class.unread]="!n.read_at" (click)="markRead(n)">
+          <div class="notif-title">{{ n.title }}</div>
+          @if (n.body) {
+            <div class="notif-body">{{ n.body }}</div>
+          }
+          <div class="notif-date">{{ formatDate(n.created_at) }}</div>
+        </li>
+      }
+    </ul>
+  }
+</div>

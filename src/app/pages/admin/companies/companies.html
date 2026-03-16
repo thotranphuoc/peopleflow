@@ -1,0 +1,101 @@
+<h1 class="page-header">Quản lý công ty</h1>
+<p class="back-link"><a routerLink="/admin">← Quản trị</a></p>
+
+@if (message()) {
+  <p class="message" [class.error]="message()?.startsWith('Lỗi')">{{ message() }}</p>
+}
+
+@if (showForm()) {
+  <div class="ml-card form-card">
+    <p class="ml-card-title">{{ isAdd() ? 'Thêm công ty' : 'Sửa công ty' }}</p>
+    <form (ngSubmit)="save()" class="companies-form">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Tên công ty</mat-label>
+        <input matInput [ngModel]="formName()" (ngModelChange)="formName.set($event)" name="companyName" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Tên viết tắt</mat-label>
+        <input matInput [ngModel]="formShortName()" (ngModelChange)="formShortName.set($event)" name="shortName" placeholder="VD: MS, NV" maxlength="20" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Logo URL</mat-label>
+        <input matInput [ngModel]="formLogoUrl()" (ngModelChange)="formLogoUrl.set($event)" name="logoUrl" placeholder="https://..." />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Địa chỉ</mat-label>
+        <input matInput [ngModel]="formAddress()" (ngModelChange)="formAddress.set($event)" name="address" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>MST</mat-label>
+        <input matInput [ngModel]="formTaxCode()" (ngModelChange)="formTaxCode.set($event)" name="taxCode" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Điện thoại</mat-label>
+        <input matInput [ngModel]="formPhone()" (ngModelChange)="formPhone.set($event)" name="phone" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Email</mat-label>
+        <input matInput type="email" [ngModel]="formEmail()" (ngModelChange)="formEmail.set($event)" name="email" />
+      </mat-form-field>
+      <p class="form-section">Vị trí Check-in (văn phòng)</p>
+      <mat-form-field appearance="outline">
+        <mat-label>Vĩ độ (lat)</mat-label>
+        <input matInput type="number" step="0.000001" [ngModel]="formCheckInLat()" (ngModelChange)="formCheckInLat.set($event != null ? +$event : null)" name="checkInLat" placeholder="21.0285" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Kinh độ (lng)</mat-label>
+        <input matInput type="number" step="0.000001" [ngModel]="formCheckInLng()" (ngModelChange)="formCheckInLng.set($event != null ? +$event : null)" name="checkInLng" placeholder="105.8542" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Bán kính (m)</mat-label>
+        <input matInput type="number" min="1" max="5000" [ngModel]="formCheckInRadius()" (ngModelChange)="formCheckInRadius.set(+$event || 50)" name="checkInRadius" />
+      </mat-form-field>
+      <p class="form-hint">Bỏ trống lat/lng = dùng mặc định. Bán kính: khoảng cách (m) cho phép Check-in hợp lệ.</p>
+      <div class="form-actions">
+        <button mat-flat-button color="primary" type="submit" [disabled]="saving()">{{ saving() ? 'Đang lưu…' : 'Lưu' }}</button>
+        <button mat-button type="button" (click)="cancelForm()">Hủy</button>
+      </div>
+    </form>
+  </div>
+}
+
+@if (!showForm()) {
+  <p><button mat-flat-button color="primary" type="button" (click)="startAdd()">Thêm công ty</button></p>
+}
+
+<div class="ml-card">
+  <p class="ml-card-title">Danh sách công ty</p>
+  @if (loading()) {
+    <p class="muted">Đang tải...</p>
+  } @else if (list().length === 0) {
+    <p class="muted">Chưa có công ty. Bấm "Thêm công ty" để tạo.</p>
+  } @else {
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Tên công ty</th>
+            <th>Viết tắt</th>
+            <th>MST</th>
+            <th>Điện thoại</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of list(); track c.id) {
+            <tr>
+              <td>{{ c.company_name }}</td>
+              <td>{{ c.short_name ?? '—' }}</td>
+              <td>{{ c.tax_code ?? '—' }}</td>
+              <td>{{ c.phone ?? '—' }}</td>
+              <td class="actions">
+                <button mat-button type="button" (click)="startEdit(c)">Sửa</button>
+                <button mat-button type="button" color="warn" (click)="deleteCompany(c)">Xóa</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

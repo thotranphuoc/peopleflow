@@ -1,0 +1,72 @@
+<h1 class="page-header">Người chờ gán vai trò</h1>
+<p><a routerLink="/admin">← Quản trị</a></p>
+
+<div class="ml-card">
+  <p class="ml-card-title">Tài khoản đã đăng ký, chưa có trong danh sách nhân sự</p>
+  @if (loading()) {
+    <p class="muted">Đang tải...</p>
+  } @else if (list().length === 0) {
+    <p class="muted">Không có ai chờ gán.</p>
+  } @else {
+    <ul class="pending-list">
+      @for (p of list(); track p.user_id) {
+        <li class="pending-item">
+          <span class="email">{{ p.email }}</span>
+          <span class="date">{{ p.created_at | date:'short' }}</span>
+          @if (showFormFor()?.user_id === p.user_id) {
+            <div class="add-form">
+              <mat-form-field appearance="outline">
+                <mat-label>Mã NV</mat-label>
+                <input matInput [ngModel]="formCode()" (ngModelChange)="formCode.set($event)" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Họ tên</mat-label>
+                <input matInput [ngModel]="formName()" (ngModelChange)="formName.set($event)" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Vai trò</mat-label>
+                <mat-select [ngModel]="formRole()" (ngModelChange)="formRole.set($event)">
+                  <mat-option value="employee">Nhân viên</mat-option>
+                  <mat-option value="manager">Quản lý</mat-option>
+                  <mat-option value="hr">HR</mat-option>
+                  <mat-option value="admin">Admin</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Phòng ban</mat-label>
+                <mat-select [ngModel]="formDepartmentId()" (ngModelChange)="formDepartmentId.set($event)">
+                  <mat-option [value]="null">—</mat-option>
+                  @for (d of departments(); track d.id) {
+                    <mat-option [value]="d.id">{{ d.code }} — {{ d.name }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              @if (formRole() === 'employee') {
+                <mat-form-field appearance="outline">
+                  <mat-label>Quản lý trực tiếp</mat-label>
+                  <mat-select [ngModel]="formManagerId()" (ngModelChange)="formManagerId.set($event)">
+                    <mat-option [value]="null">—</mat-option>
+                    @for (m of managersForSelect(); track m.id) {
+                      <mat-option [value]="m.id">{{ m.full_name }} ({{ m.employee_code }})</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+              }
+              @if (formError()) {
+                <p class="error-msg">{{ formError() }}</p>
+              }
+              <div class="form-actions">
+                <button mat-button (click)="closeForm()">Hủy</button>
+                <button mat-flat-button color="primary" [disabled]="formSubmitting()" (click)="submitForm()">
+                  Thêm vào nhân sự
+                </button>
+              </div>
+            </div>
+          } @else {
+            <button mat-flat-button color="primary" (click)="openForm(p)">Thêm vào nhân sự</button>
+          }
+        </li>
+      }
+    </ul>
+  }
+</div>

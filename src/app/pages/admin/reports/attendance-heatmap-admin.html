@@ -1,0 +1,23 @@
+<h1 class="page-header">Heat map chấm công (Quản lý)</h1>
+<p class="back-link"><a routerLink="/admin">← Quản trị</a></p>
+
+<div class="ml-card filter-card">
+  <p class="ml-card-title">Chọn nhân viên</p>
+  @if (loading()) {
+    <p class="muted">Đang tải...</p>
+  } @else {
+    <select
+      [value]="selectedEmployeeId() ?? ''"
+      (change)="selectEmployee($any($event.target).value)"
+      class="employee-select"
+    >
+      @for (e of employees(); track e.id) {
+        <option [value]="e.id">{{ e.employee_code }} — {{ e.full_name }}</option>
+      }
+    </select>
+  }
+</div>
+
+@if (selectedEmployeeId(); as eid) {
+  <app-attendance-heatmap [employeeId]="eid" />
+}

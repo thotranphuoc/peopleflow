@@ -1,0 +1,94 @@
+<h1 class="page-header">Ngày lễ</h1>
+<p class="back-link"><a routerLink="/admin">← Quản trị</a></p>
+
+<div class="ml-card holidays-card">
+  <header class="card-header">
+    <div class="filter-row">
+      <span class="filter-label">Năm:</span>
+      <button type="button" class="filter-btn" [class.active]="yearFilter() === null" (click)="filterByYear(null)">Tất cả</button>
+      @for (y of years(); track y) {
+        <button type="button" class="filter-btn" [class.active]="yearFilter() === y" (click)="filterByYear(y)">{{ y }}</button>
+      }
+    </div>
+    <button mat-flat-button color="primary" (click)="openCreate()">Thêm ngày lễ</button>
+  </header>
+
+  @if (showCreateForm()) {
+    <div class="create-form">
+      <mat-form-field appearance="outline">
+        <mat-label>Ngày</mat-label>
+        <input matInput [matDatepicker]="pickerCreate" [ngModel]="createDate()" (ngModelChange)="createDate.set($event)" />
+        <mat-datepicker-toggle matIconSuffix [for]="pickerCreate"></mat-datepicker-toggle>
+        <mat-datepicker #pickerCreate></mat-datepicker>
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="name-field">
+        <mat-label>Tên</mat-label>
+        <input matInput [ngModel]="createName()" (ngModelChange)="createName.set($event)" placeholder="VD: Tết Dương lịch" />
+      </mat-form-field>
+      <mat-checkbox [ngModel]="createIsRecurring()" (ngModelChange)="createIsRecurring.set($event)">Lặp hàng năm</mat-checkbox>
+      <div class="form-actions">
+        <button mat-button (click)="closeCreate()">Hủy</button>
+        <button mat-flat-button color="primary" [disabled]="createSubmitting()" (click)="submitCreate()">Thêm</button>
+      </div>
+      @if (createError()) {
+        <p class="error-msg">{{ createError() }}</p>
+      }
+    </div>
+  }
+
+  @if (loading()) {
+    <p class="muted">Đang tải...</p>
+  } @else {
+    <div class="table-wrap">
+      <table class="holiday-table">
+        <thead>
+          <tr>
+            <th class="col-date">Ngày</th>
+            <th class="col-name">Tên</th>
+            <th class="col-actions"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of sortedList(); track row.h.id) {
+            <tr class="holiday-row" [class.editing]="editId() === row.h.id">
+              @if (editId() === row.h.id) {
+                <td colspan="3" class="edit-cell">
+                  <div class="edit-form">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Ngày</mat-label>
+                      <input matInput [matDatepicker]="pickerEdit" [ngModel]="editDate()" (ngModelChange)="editDate.set($event)" />
+                      <mat-datepicker-toggle matIconSuffix [for]="pickerEdit"></mat-datepicker-toggle>
+                      <mat-datepicker #pickerEdit></mat-datepicker>
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="name-field">
+                      <mat-label>Tên</mat-label>
+                      <input matInput [ngModel]="editName()" (ngModelChange)="editName.set($event)" />
+                    </mat-form-field>
+                    <mat-checkbox [ngModel]="editIsRecurring()" (ngModelChange)="editIsRecurring.set($event)">Lặp hàng năm</mat-checkbox>
+                    <button mat-button (click)="submitEdit()">Lưu</button>
+                    <button mat-button (click)="cancelEdit()">Hủy</button>
+                  </div>
+                </td>
+              } @else {
+                <td class="col-date"><span class="date">{{ row.displayDateFormatted }}</span></td>
+                <td class="col-name">
+                  <span class="name">{{ row.h.name }}</span>
+                  @if (row.h.is_recurring) {
+                    <span class="badge">lặp</span>
+                  }
+                </td>
+                <td class="col-actions">
+                  <button mat-icon-button (click)="openEdit(row.h)" title="Sửa"><mat-icon>edit</mat-icon></button>
+                  <button mat-icon-button color="warn" (click)="deleteHoliday(row.h.id)" title="Xóa"><mat-icon>delete</mat-icon></button>
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (sortedList().length === 0) {
+      <p class="muted">Chưa có ngày lễ nào.</p>
+    }
+  }
+</div>
