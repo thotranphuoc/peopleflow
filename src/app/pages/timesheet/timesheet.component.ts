@@ -10,6 +10,10 @@ import { HolidayService } from '../../core/services/holiday.service';
 import { OfflineQueueService } from '../../core/services/offline-queue.service';
 import { SupplementFormDialogComponent, type SupplementFormDialogData } from './supplement-form-dialog.component';
 import { DayDetailDialogComponent, type DayDetailDialogData } from './day-detail-dialog.component';
+import {
+  CameraCaptureDialogComponent,
+  type CameraCaptureResult,
+} from './camera-capture-dialog.component';
 import { AttendanceHeatmapService } from '../../core/services/attendance-heatmap.service';
 import type { Attendance, AttendanceStatus } from '../../core/models';
 
@@ -340,37 +344,26 @@ export class TimesheetComponent implements OnInit {
     this.locationWarning.set(null);
     this.capturing.set(true);
 
-    let photo: Blob | undefined;
-    let lat: number | undefined;
-    let lng: number | undefined;
+    const title = isCheckOut ? 'Chụp ảnh check-out' : 'Chụp ảnh check-in';
+    const ref = this.dialog.open(CameraCaptureDialogComponent, {
+      data: { title },
+      width: 'min(420px, 96vw)',
+      disableClose: false,
+    });
 
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user' },
-        audio: false,
+    const photo: Blob | undefined = await new Promise<Blob | undefined>((resolve) => {
+      ref.afterClosed().subscribe((result: CameraCaptureResult) => {
+        resolve(result ?? undefined);
       });
-      const video = document.createElement('video');
-      video.srcObject = stream;
-      video.play();
-      await new Promise<void>((res, rej) => {
-        video.onloadeddata = () => res();
-        video.onerror = () => rej(new Error('Camera error'));
-      });
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.drawImage(video, 0, 0);
-        const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, 'image/jpeg', 0.9));
-        if (blob) photo = blob;
-      }
-      stream.getTracks().forEach((t) => t.stop());
-    } catch (e) {
-      this.submitError.set('Không thể mở camera. Cho phép quyền camera và thử lại.');
+    });
+
+    if (!photo) {
       this.capturing.set(false);
       return;
     }
+
+    let lat: number | undefined;
+    let lng: number | undefined;
 
     try {
       const pos = await new Promise<GeolocationPosition>((res, rej) => {
