@@ -72,7 +72,7 @@ export class ReportService {
     return Math.round(Math.max(0, work));
   }
 
-  async getAttendanceReport(month: number, year: number, departmentId?: string | null): Promise<AttendanceReportRow[]> {
+  async getAttendanceReport(month: number, year: number, departmentId?: string | null, employeeId?: string | null): Promise<AttendanceReportRow[]> {
     const start = `${year}-${String(month).padStart(2, '0')}-01`;
     const lastDay = new Date(year, month, 0).getDate();
     const end = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
@@ -89,7 +89,9 @@ export class ReportService {
       .from('employees')
       .select('id, employee_code, full_name, department_id')
       .order('employee_code');
-    if (departmentId) {
+    if (employeeId) {
+      employeeQuery = employeeQuery.eq('id', employeeId);
+    } else if (departmentId) {
       employeeQuery = employeeQuery.eq('department_id', departmentId);
     }
     const { data: employees } = await employeeQuery;
@@ -146,12 +148,13 @@ export class ReportService {
       if (cur) {
         cur.work_days += 1;
         if (row.check_in_time && row.check_out_time) {
-          cur.effective_minutes += this.effectiveMinutes(
+          const raw = this.effectiveMinutes(
             row.check_in_time,
             row.check_out_time,
             lunchStartMinutes,
             lunchEndMinutes
           );
+          cur.effective_minutes += Math.min(requiredMinutesPerDay, raw);
         }
       }
     }
@@ -208,13 +211,14 @@ export class ReportService {
     return result;
   }
 
-  /** Danh sách chấm công chờ duyệt (bổ sung). Có thể lọc theo phòng ban và tháng/năm. */
-  async getPendingAttendances(departmentId?: string | null, month?: number, year?: number): Promise<AttendanceDayRow[]> {
+  /** Danh sách chấm công chờ duyệt (bổ sung). Có thể lọc theo phòng ban, tháng/năm, nhân viên. */
+  async getPendingAttendances(departmentId?: string | null, month?: number, year?: number, employeeId?: string | null): Promise<AttendanceDayRow[]> {
     let empQuery = this.supabase.supabase
       .from('employees')
       .select('id, employee_code, full_name, department_id')
       .order('employee_code');
-    if (departmentId) empQuery = empQuery.eq('department_id', departmentId);
+    if (employeeId) empQuery = empQuery.eq('id', employeeId);
+    else if (departmentId) empQuery = empQuery.eq('department_id', departmentId);
     const { data: employees } = await empQuery;
     if (!employees?.length) return [];
 
@@ -240,6 +244,7 @@ export class ReportService {
       config?.lunch_start_time != null ? this.attendanceConfig.timeToMinutes(config.lunch_start_time) : 720;
     const lunchEndMinutes =
       config?.lunch_end_time != null ? this.attendanceConfig.timeToMinutes(config.lunch_end_time) : 810;
+    const requiredMinutesPerDay = config?.required_work_minutes_per_day ?? 480;
 
     const empById = new Map(
       (employees ?? []).map((e: { id: string; employee_code: string; full_name: string; department_id: string | null }) => [
@@ -268,12 +273,13 @@ export class ReportService {
       if (!emp) continue;
       let totalWorkMinutes: number | null = null;
       if (row.check_in_time && row.check_out_time) {
-        totalWorkMinutes = this.effectiveMinutes(
+        const raw = this.effectiveMinutes(
           row.check_in_time,
           row.check_out_time,
           lunchStartMinutes,
           lunchEndMinutes
         );
+        totalWorkMinutes = Math.min(requiredMinutesPerDay, raw);
       }
       result.push({
         employee_id: row.employee_id,
@@ -298,13 +304,16 @@ export class ReportService {
   async getAttendanceReportByDay(
     date: string,
     departmentId?: string | null,
-    endDate?: string | null
+    endDate?: string | null,
+    employeeId?: string | null
   ): Promise<AttendanceDayRow[]> {
     let employeeQuery = this.supabase.supabase
       .from('employees')
       .select('id, employee_code, full_name, department_id')
       .order('employee_code');
-    if (departmentId) {
+    if (employeeId) {
+      employeeQuery = employeeQuery.eq('id', employeeId);
+    } else if (departmentId) {
       employeeQuery = employeeQuery.eq('department_id', departmentId);
     }
     const { data: employees } = await employeeQuery;
@@ -328,6 +337,7 @@ export class ReportService {
       config?.lunch_start_time != null ? this.attendanceConfig.timeToMinutes(config.lunch_start_time) : 720;
     const lunchEndMinutes =
       config?.lunch_end_time != null ? this.attendanceConfig.timeToMinutes(config.lunch_end_time) : 810;
+    const requiredMinutesPerDay = config?.required_work_minutes_per_day ?? 480;
 
     const deptIds = [
       ...new Set(
@@ -367,12 +377,13 @@ export class ReportService {
       if (!emp) continue;
       let totalWorkMinutes: number | null = null;
       if (row.check_in_time && row.check_out_time) {
-        totalWorkMinutes = this.effectiveMinutes(
+        const raw = this.effectiveMinutes(
           row.check_in_time,
           row.check_out_time,
           lunchStartMinutes,
           lunchEndMinutes
         );
+        totalWorkMinutes = Math.min(requiredMinutesPerDay, raw);
       }
       result.push({
         employee_id: row.employee_id,

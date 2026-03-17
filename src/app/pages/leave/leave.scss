@@ -289,6 +289,17 @@
   max-width: 400px;
 }
 
+.halfday-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.halfday-options mat-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
 .full-width { width: 100%; }
 
 .form-actions {

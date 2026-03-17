@@ -70,7 +70,8 @@ export class AttendancePenaltyService {
     if (att?.check_in_time && att?.check_out_time && config) {
       const lunchStart = this.configService.timeToMinutes(config.lunch_start_time);
       const lunchEnd = this.configService.timeToMinutes(config.lunch_end_time);
-      effective = effectiveMinutes(att.check_in_time, att.check_out_time, lunchStart, lunchEnd);
+      const raw = effectiveMinutes(att.check_in_time, att.check_out_time, lunchStart, lunchEnd);
+      effective = Math.min(required, raw);
       attendanceId = att.id;
     }
     const shortfall = Math.max(0, required - effective);

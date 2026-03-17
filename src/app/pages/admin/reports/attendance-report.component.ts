@@ -15,7 +15,7 @@ import type {
   AttendanceReportRow,
   AttendanceDayRow,
 } from '../../../core/services/report.service';
-import type { Department } from '../../../core/models';
+import type { Department, Employee } from '../../../core/models';
 import {
   AttendanceApprovalDialogComponent,
   type AttendanceApprovalDialogResult,
@@ -60,6 +60,8 @@ export class AttendanceReportComponent implements OnInit {
     return new Date(s + 'T12:00:00');
   });
   protected readonly departmentId = signal<string | null>(null);
+  protected readonly employeeId = signal<string | null>(null);
+  protected readonly employees = signal<Employee[]>([]);
   protected readonly rows = signal<AttendanceReportRow[]>([]);
   protected readonly rowsByDay = signal<AttendanceDayRow[]>([]);
   protected readonly loading = signal(false);
@@ -74,33 +76,49 @@ export class AttendanceReportComponent implements OnInit {
     return [y, y - 1];
   })();
 
+  /** Nhân viên lọc theo phòng ban đã chọn. */
+  protected readonly filteredEmployees = computed(() => {
+    const list = this.employees();
+    const deptId = this.departmentId();
+    if (!deptId) return list;
+    return list.filter((e) => e.department_id === deptId);
+  });
+
   async ngOnInit(): Promise<void> {
-    const depts = await this.employeeService.getDepartments();
+    const [depts, emps] = await Promise.all([
+      this.employeeService.getDepartments(),
+      this.employeeService.getEmployees(),
+    ]);
     this.departments.set(depts);
+    this.employees.set(emps);
     await this.load();
   }
 
   protected async load(): Promise<void> {
     this.loading.set(true);
+    const empId = this.employeeId();
     if (this.viewMode() === 'day') {
       const data = await this.reportService.getAttendanceReportByDay(
         this.fromDate(),
         this.departmentId(),
-        this.toDate()
+        this.toDate(),
+        empId
       );
       this.rowsByDay.set(data);
     } else if (this.viewMode() === 'pending') {
       const data = await this.reportService.getPendingAttendances(
         this.departmentId(),
         this.month(),
-        this.year()
+        this.year(),
+        empId
       );
       this.rowsByDay.set(data);
     } else {
       const data = await this.reportService.getAttendanceReport(
         this.month(),
         this.year(),
-        this.departmentId()
+        this.departmentId(),
+        empId
       );
       this.rows.set(data);
     }

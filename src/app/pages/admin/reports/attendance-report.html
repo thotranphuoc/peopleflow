@@ -59,10 +59,19 @@
     }
     <mat-form-field appearance="outline">
       <mat-label>Phòng ban</mat-label>
-      <mat-select [ngModel]="departmentId()" (ngModelChange)="departmentId.set($event)">
+      <mat-select [ngModel]="departmentId()" (ngModelChange)="departmentId.set($event); employeeId.set(null)">
         <mat-option [value]="null">Tất cả</mat-option>
         @for (d of departments(); track d.id) {
           <mat-option [value]="d.id">{{ d.code }} — {{ d.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Nhân viên</mat-label>
+      <mat-select [ngModel]="employeeId()" (ngModelChange)="employeeId.set($event)">
+        <mat-option [value]="null">Tất cả</mat-option>
+        @for (e of filteredEmployees(); track e.id) {
+          <mat-option [value]="e.id">{{ e.employee_code }} — {{ e.full_name }}</mat-option>
         }
       </mat-select>
     </mat-form-field>

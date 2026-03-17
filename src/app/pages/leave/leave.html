@@ -46,7 +46,7 @@
               </div>
               <div class="pending-row">
                 <span class="pending-label">Thời gian:</span>
-                <span class="pending-value">{{ r.start_time | date:'dd/MM/yyyy HH:mm' }} → {{ r.end_time | date:'dd/MM/yyyy HH:mm' }}</span>
+                <span class="pending-value">{{ requestTimeLabel(r) }}</span>
               </div>
               @if (r.deduct_annual_leave) {
                 <div class="pending-row">
@@ -102,24 +102,37 @@
       }
       <mat-form-field appearance="outline">
         <mat-label>Ngày bắt đầu</mat-label>
-        <input matInput [matDatepicker]="pickerStart" [ngModel]="createStartDate()" (ngModelChange)="createStartDate.set($event)" />
+        <input matInput [matDatepicker]="pickerStart" [ngModel]="createStartDate()" (ngModelChange)="onStartDateChanged($event)" />
         <mat-datepicker-toggle matIconSuffix [for]="pickerStart"></mat-datepicker-toggle>
         <mat-datepicker #pickerStart></mat-datepicker>
       </mat-form-field>
       <mat-form-field appearance="outline">
-        <mat-label>Giờ bắt đầu</mat-label>
-        <input matInput type="time" [ngModel]="createStartTime()" (ngModelChange)="createStartTime.set($event)" />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
         <mat-label>Ngày kết thúc</mat-label>
-        <input matInput [matDatepicker]="pickerEnd" [ngModel]="createEndDate()" (ngModelChange)="createEndDate.set($event)" />
+        <input matInput [matDatepicker]="pickerEnd" [ngModel]="createEndDate()" (ngModelChange)="createEndDate.set($event)" [disabled]="isSingleDayOnlyDuration()" />
         <mat-datepicker-toggle matIconSuffix [for]="pickerEnd"></mat-datepicker-toggle>
         <mat-datepicker #pickerEnd></mat-datepicker>
       </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Giờ kết thúc</mat-label>
-        <input matInput type="time" [ngModel]="createEndTime()" (ngModelChange)="createEndTime.set($event)" />
-      </mat-form-field>
+      @if (createDuration() === 'leave_hours') {
+        <mat-form-field appearance="outline">
+          <mat-label>Giờ bắt đầu</mat-label>
+          <input matInput type="time" [ngModel]="createStartTime()" (ngModelChange)="createStartTime.set($event)" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Giờ kết thúc</mat-label>
+          <input matInput type="time" [ngModel]="createEndTime()" (ngModelChange)="createEndTime.set($event)" />
+        </mat-form-field>
+      } @else if (createDuration() === 'leave_half') {
+        <div class="halfday-options">
+          <mat-radio-group [ngModel]="createHalfDayPart()" (ngModelChange)="createHalfDayPart.set($event)">
+            <mat-radio-button value="morning">
+              Nghỉ buổi sáng ({{ workStartTime() }}–{{ lunchStartTime() }})
+            </mat-radio-button>
+            <mat-radio-button value="afternoon">
+              Nghỉ buổi chiều ({{ lunchEndTime() }}–{{ workEndTime() }})
+            </mat-radio-button>
+          </mat-radio-group>
+        </div>
+      }
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Lý do</mat-label>
         <textarea matInput [ngModel]="createReason()" (ngModelChange)="createReason.set($event)" rows="2"></textarea>
@@ -144,9 +157,7 @@
         <li class="request-card">
           <div class="request-type">{{ requestLabel(r) }}</div>
           <div class="request-dates">
-            <span class="request-from">{{ r.start_time | date:'d/M/yy, HH:mm' }}</span>
-            <span class="request-sep">→</span>
-            <span class="request-to">{{ r.end_time | date:'d/M/yy, HH:mm' }}</span>
+            <span class="request-from">{{ requestTimeLabel(r) }}</span>
           </div>
           <div class="request-footer">
             <span [class]="'request-status status-' + r.status">{{ statusLabels[r.status] }}</span>

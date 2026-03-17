@@ -5,7 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 export interface PhotoViewerDialogData {
   photoUrl: string;
   title?: string;
-  /** Hiện nút Đóng và thông báo thành công */
+  /** Hiện nút Đóng (sau check-in/check-out) */
   showSuccess?: boolean;
 }
 
@@ -17,9 +17,6 @@ export interface PhotoViewerDialogData {
   template: `
     <h2 mat-dialog-title>{{ data.title ?? 'Ảnh chấm công' }}</h2>
     <mat-dialog-content>
-      @if (data.showSuccess) {
-        <p class="success-msg">Đã upload thành công</p>
-      }
       <img [src]="data.photoUrl" alt="Ảnh chấm công" class="photo-full" />
     </mat-dialog-content>
     @if (data.showSuccess) {
@@ -30,11 +27,6 @@ export interface PhotoViewerDialogData {
   `,
   styles: [
     `
-      .success-msg {
-        color: var(--ml-success, #22c55e);
-        font-weight: 600;
-        margin: 0 0 0.5rem;
-      }
       mat-dialog-content {
         padding: 0;
         overflow: hidden;

@@ -80,7 +80,7 @@
     <span class="dot heat-ok">🟢 Đủ 8h</span>
     <span class="dot heat-mid">🟡 6h–8h / Chờ duyệt</span>
     <span class="dot heat-bad">🔴 Thiếu (&lt;6h)</span>
-    <span class="dot holiday">🟨 Ngày lễ</span>
+    <span class="dot holiday">🟪 Ngày lễ</span>
     <span class="dot leave">🟦 Nghỉ phép (P)</span>
   </div>
   <p class="legend-note">Click ô để xem chi tiết chấm công / loại nghỉ.</p>
@@ -102,7 +102,7 @@
             [class.leave-cell]="!!d.leaveLabel"
             [class.holiday-cell]="!!d.holidayName && !d.leaveLabel"
             [class.can-supplement]="d.canSupplement"
-            [class.has-detail]="!!d.leaveLabel || !!d.holidayName || !!d.check_in_time || !!d.check_out_time || !!d.check_in_photo_url || !!d.check_out_photo_url"
+            [class.has-detail]="!!d.leaveLabel || !!d.holidayName || !!d.check_in_time || !!d.check_out_time || !!d.check_in_photo_url || !!d.check_out_photo_url || !!d.pendingReason"
             [style.background]="cellBackground(d)"
             [title]="cellTitle(d)"
             (click)="onDayClick(d, $event); d.canSupplement && openSupplementForm(d)"

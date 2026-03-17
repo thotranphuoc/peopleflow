@@ -58,6 +58,8 @@ export class TimesheetComponent implements OnInit {
 
   /** Nghỉ trưa (phút từ 0h). Mặc định 12:00–13:30. */
   protected readonly lunchMinutes = signal<{ start: number; end: number }>({ start: 720, end: 810 });
+  /** Số phút làm tối đa tính cho 1 ngày (cap giờ làm). */
+  private readonly requiredMinutesPerDay = signal(480);
 
   protected readonly capturing = signal(false);
   protected readonly submitError = signal<string | null>(null);
@@ -110,6 +112,8 @@ export class TimesheetComponent implements OnInit {
       holidayName: string | null;
       canSupplement: boolean;
       leaveLabel: string | null;
+      /** Lý do cần duyệt khi status === 'pending' */
+      pendingReason: string | null;
     }[] = [];
     const todayStr = new Date().toISOString().slice(0, 10);
     const lunch = this.lunchMinutes();
@@ -129,6 +133,7 @@ export class TimesheetComponent implements OnInit {
         holidayName: null,
         canSupplement: false,
         leaveLabel: null,
+        pendingReason: null,
       });
     }
     for (let d = 1; d <= daysInMonth; d++) {
@@ -137,7 +142,9 @@ export class TimesheetComponent implements OnInit {
       let durationLabel: string | null = null;
       let effMin: number | null = null;
       if (rec?.check_in_time && rec?.check_out_time) {
-        effMin = effectiveMinutes(rec.check_in_time, rec.check_out_time, lunch.start, lunch.end);
+        const raw = effectiveMinutes(rec.check_in_time, rec.check_out_time, lunch.start, lunch.end);
+        const cap = this.requiredMinutesPerDay();
+        effMin = Math.min(cap, raw);
         const h = Math.floor(effMin / 60);
         const mMin = effMin % 60;
         durationLabel = mMin > 0 ? `${h}h ${mMin}m` : `${h}h`;
@@ -150,6 +157,13 @@ export class TimesheetComponent implements OnInit {
       const isLeave = !!leaveLabel;
       const needsSupplement =
         isPastOrToday && !holidayName && !isWeekend && !isLeave && (!rec || !rec.check_out_time);
+      let pendingReason: string | null = null;
+      if (rec?.status === 'pending') {
+        const parts: string[] = [];
+        if (rec.is_valid_location === false) parts.push('Ngoài khu vực VP');
+        if (rec.supplement_reason?.trim()) parts.push('Bổ sung thủ công');
+        pendingReason = parts.length ? parts.join('; ') : 'Chờ duyệt';
+      }
       days.push({
         key: date,
         date,
@@ -165,6 +179,7 @@ export class TimesheetComponent implements OnInit {
         holidayName,
         canSupplement: needsSupplement,
         leaveLabel,
+        pendingReason,
       });
     }
     return days;
@@ -192,6 +207,7 @@ export class TimesheetComponent implements OnInit {
           end: this.attendanceConfig.timeToMinutes(cfg.lunch_end_time),
         });
       }
+      this.requiredMinutesPerDay.set(cfg?.required_work_minutes_per_day ?? 480);
     });
   }
 
@@ -241,7 +257,7 @@ export class TimesheetComponent implements OnInit {
     leaveLabel: string | null;
   }): string {
     if (d.leaveLabel) return 'var(--ml-heat-leave, #e0f2fe)'; // xanh nhạt cho ngày nghỉ phép
-    if (d.holidayName) return '#fef9e7';
+    if (d.holidayName) return '#f3e8ff'; // tím nhạt
     if (d.status === 'pending') return '#eab308';
     if (d.effectiveMinutes != null) {
       if (d.effectiveMinutes >= 480) return 'var(--ml-heat-ok, #22c55e)';
@@ -291,10 +307,17 @@ export class TimesheetComponent implements OnInit {
     check_in_photo_url?: string | null;
     check_out_photo_url?: string | null;
     durationLabel?: string | null;
+    pendingReason?: string | null;
   }, _event: Event): void {
     if (d.canSupplement) return;
     const hasDetail =
-      d.leaveLabel || d.holidayName || d.check_in_time || d.check_out_time || d.check_in_photo_url || d.check_out_photo_url;
+      d.leaveLabel ||
+      d.holidayName ||
+      d.check_in_time ||
+      d.check_out_time ||
+      d.check_in_photo_url ||
+      d.check_out_photo_url ||
+      !!d.pendingReason;
     if (!hasDetail || !d.date) return;
     this.dialog.open(DayDetailDialogComponent, {
       data: {
@@ -306,6 +329,7 @@ export class TimesheetComponent implements OnInit {
         checkInPhotoUrl: d.check_in_photo_url ?? null,
         checkOutPhotoUrl: d.check_out_photo_url ?? null,
         durationLabel: d.durationLabel ?? null,
+        pendingReason: d.pendingReason ?? null,
       } satisfies DayDetailDialogData,
       width: '360px',
     });
@@ -440,12 +464,5 @@ export class TimesheetComponent implements OnInit {
       return;
     }
     this.photoRefreshTrigger.update((v) => v + 1);
-    const blobUrl = URL.createObjectURL(photo);
-    const successTitle = isCheckOut ? 'Check-out thành công' : 'Check-in thành công';
-    const successRef = this.dialog.open(PhotoViewerDialogComponent, {
-      data: { photoUrl: blobUrl, title: successTitle, showSuccess: true },
-      maxWidth: '95vw',
-    });
-    successRef.afterClosed().subscribe(() => URL.revokeObjectURL(blobUrl));
   }
 }

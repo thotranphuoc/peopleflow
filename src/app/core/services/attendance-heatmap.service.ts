@@ -66,7 +66,7 @@ export class AttendanceHeatmapService {
         ? `${year}-${String(month).padStart(2, '0')}-${String(new Date(year, month, 0).getDate()).padStart(2, '0')}`
         : `${year}-12-31`;
 
-    const [attendancesRes, leaveRes, penaltiesRes] = await Promise.all([
+    const [attendancesRes, leaveRes, penaltiesRes, config] = await Promise.all([
       this.supabase.supabase
         .from('attendances')
         .select('work_date, check_in_time, check_out_time')
@@ -87,6 +87,7 @@ export class AttendanceHeatmapService {
         .eq('employee_id', employeeId)
         .gte('work_date', start)
         .lte('work_date', end),
+      this.configService.get(),
     ]);
 
     const attByDate = new Map<string, { check_in_time: string; check_out_time: string }>();
@@ -134,6 +135,7 @@ export class AttendanceHeatmapService {
       return range?.label ?? null;
     }
 
+    const maxMinutesPerDay = config?.required_work_minutes_per_day ?? 480;
     const result: HeatMapDay[] = [];
     const d = new Date(start);
     const endDate = new Date(end);
@@ -144,7 +146,8 @@ export class AttendanceHeatmapService {
       const isLeave = leaveLabel != null;
       let effectiveMinutes: number | null = null;
       if (att) {
-        effectiveMinutes = effectiveWorkMinutes(att.check_in_time, att.check_out_time);
+        const raw = effectiveWorkMinutes(att.check_in_time, att.check_out_time);
+        effectiveMinutes = Math.min(maxMinutesPerDay, raw);
       }
       result.push({
         date: dateStr,

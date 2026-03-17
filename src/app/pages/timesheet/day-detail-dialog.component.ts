@@ -13,6 +13,8 @@ export interface DayDetailDialogData {
   checkOutPhotoUrl?: string | null;
   durationLabel?: string | null;
   holidayName?: string | null;
+  /** Lý do ô vàng (chờ duyệt) */
+  pendingReason?: string | null;
 }
 
 @Component({
@@ -28,6 +30,9 @@ export interface DayDetailDialogData {
       }
       @if (data.holidayName) {
         <p class="detail-row"><strong>Ngày lễ:</strong> {{ data.holidayName }}</p>
+      }
+      @if (data.pendingReason) {
+        <p class="detail-row pending-reason"><strong>Chờ duyệt:</strong> {{ data.pendingReason }}</p>
       }
       @if (data.checkInTime || data.checkOutTime) {
         <p class="detail-row">
@@ -56,7 +61,7 @@ export interface DayDetailDialogData {
           (photoClick)="openPhoto($event)"
         />
       }
-      @if (!data.leaveLabel && !data.holidayName && !data.checkInTime && !data.checkOutTime && !data.checkInPhotoUrl && !data.checkOutPhotoUrl) {
+      @if (!data.leaveLabel && !data.holidayName && !data.pendingReason && !data.checkInTime && !data.checkOutTime && !data.checkInPhotoUrl && !data.checkOutPhotoUrl) {
         <p class="detail-row muted">Chưa có thông tin chấm công.</p>
       }
     </mat-dialog-content>
@@ -69,6 +74,7 @@ export interface DayDetailDialogData {
       .detail-row { margin: 0 0 0.5rem; font-size: 0.9375rem; }
       .detail-row:last-child { margin-bottom: 0; }
       .detail-row.muted { color: var(--ml-text-muted); }
+      .detail-row.pending-reason { color: #b45309; }
       mat-dialog-content { min-width: 280px; }
     `,
   ],
