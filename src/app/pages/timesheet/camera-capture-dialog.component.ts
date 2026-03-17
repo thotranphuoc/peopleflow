@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
   inject,
   signal,
   viewChild,
@@ -31,6 +32,11 @@ export type CameraCaptureResult = Blob | null;
           <p>{{ error() }}</p>
           <p class="hint">Đảm bảo bạn truy cập qua HTTPS hoặc localhost và đã cấp quyền camera.</p>
         </div>
+      } @else if (previewUrl()) {
+        <div class="photo-preview-wrap">
+          <img [src]="previewUrl()!" alt="Ảnh vừa chụp" class="photo-preview" />
+          <p class="preview-hint">Kiểm tra ảnh. Click "Chụp lại" nếu chưa ổn.</p>
+        </div>
       } @else {
         <div class="camera-preview-wrap">
           <video
@@ -51,7 +57,18 @@ export type CameraCaptureResult = Blob | null;
       }
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      @if (!error()) {
+      @if (error()) {
+        <button mat-flat-button mat-dialog-close>Đóng</button>
+      } @else if (previewUrl()) {
+        <button mat-button (click)="retake()">
+          <mat-icon>camera_alt</mat-icon>
+          Chụp lại
+        </button>
+        <button mat-flat-button color="primary" (click)="confirm()">
+          <mat-icon>check</mat-icon>
+          Xác nhận
+        </button>
+      } @else {
         <button mat-button mat-dialog-close>Hủy</button>
         <button
           mat-flat-button
@@ -62,8 +79,6 @@ export type CameraCaptureResult = Blob | null;
           <mat-icon>camera_alt</mat-icon>
           Chụp ảnh
         </button>
-      } @else {
-        <button mat-flat-button mat-dialog-close>Đóng</button>
       }
     </mat-dialog-actions>
   `,
@@ -87,6 +102,25 @@ export type CameraCaptureResult = Blob | null;
       .camera-preview.hidden {
         visibility: hidden;
         position: absolute;
+      }
+      .photo-preview-wrap {
+        min-width: 320px;
+        min-height: 240px;
+        max-width: 100%;
+        background: #000;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .photo-preview {
+        width: 100%;
+        height: auto;
+        display: block;
+        max-height: 70vh;
+      }
+      .preview-hint {
+        margin: 0.5rem 0 0;
+        font-size: 0.875rem;
+        color: var(--ml-text-muted);
       }
       .camera-loading-overlay {
         position: absolute;
@@ -140,17 +174,21 @@ export class CameraCaptureDialogComponent implements OnDestroy {
     inject(MAT_DIALOG_DATA, { optional: true }) ?? { title: 'Chụp ảnh check-in' }
   );
 
-  protected readonly videoEl = viewChild<HTMLVideoElement>('videoEl');
+  protected readonly videoEl = viewChild<ElementRef<HTMLVideoElement>>('videoEl');
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
+  protected readonly previewUrl = signal<string | null>(null);
 
   private stream: MediaStream | null = null;
+  private capturedBlob: Blob | null = null;
 
   /** Init is done when video element is available - use effect to start stream */
   private initEffect = effect(() => {
+    if (this.previewUrl()) return;
     const el = this.videoEl();
-    if (!el) return;
-    void this.startCamera(el);
+    const video = el?.nativeElement;
+    if (!video) return;
+    void this.startCamera(video);
   });
 
   private async startCamera(video: HTMLVideoElement): Promise<void> {
@@ -207,26 +245,40 @@ export class CameraCaptureDialogComponent implements OnDestroy {
   }
 
   protected capture(): void {
-    const video = this.videoEl();
+    const video = this.videoEl()?.nativeElement;
     if (!video || !video.videoWidth || this.loading() || this.error()) return;
 
     const canvas = document.createElement('canvas');
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      this.dialogRef.close(null);
-      return;
-    }
+    if (!ctx) return;
     ctx.drawImage(video, 0, 0);
     canvas.toBlob(
       (blob) => {
+        if (!blob) return;
         this.cleanup();
-        this.dialogRef.close(blob ?? null);
+        this.capturedBlob = blob;
+        this.previewUrl.set(URL.createObjectURL(blob));
       },
       'image/jpeg',
       0.9
     );
+  }
+
+  protected retake(): void {
+    const url = this.previewUrl();
+    if (url) URL.revokeObjectURL(url);
+    this.previewUrl.set(null);
+    this.capturedBlob = null;
+    this.loading.set(true);
+  }
+
+  protected confirm(): void {
+    const url = this.previewUrl();
+    if (url) URL.revokeObjectURL(url);
+    this.cleanup();
+    this.dialogRef.close(this.capturedBlob ?? null);
   }
 
   private cleanup(): void {
@@ -237,6 +289,8 @@ export class CameraCaptureDialogComponent implements OnDestroy {
   }
 
   ngOnDestroy(): void {
+    const url = this.previewUrl();
+    if (url) URL.revokeObjectURL(url);
     this.cleanup();
   }
 }

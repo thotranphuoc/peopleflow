@@ -87,6 +87,7 @@
             <th>Tổng TG làm</th>
             <th>Trạng thái</th>
             @if (viewMode() === 'pending') {
+              <th>Lý do cần duyệt</th>
               <th>Lý do bổ sung (NV)</th>
               <th>Thao tác</th>
             }
@@ -116,6 +117,12 @@
               <td>{{ formatDuration(r.total_work_minutes) }}</td>
               <td>{{ statusLabel(r.status) }}</td>
               @if (viewMode() === 'pending') {
+                <td class="reason-cell">
+                  <span>{{ requiresApprovalReason(r) }}</span>
+                  @if (r.is_valid_location === false && getMapsUrl(r.check_in_lat_lng)) {
+                    <a [href]="getMapsUrl(r.check_in_lat_lng)!" target="_blank" rel="noopener noreferrer" class="maps-link">Xem vị trí</a>
+                  }
+                </td>
                 <td class="note-cell">{{ r.supplement_reason ?? '—' }}</td>
                 <td class="actions-cell">
                   @if (r.status === 'pending') {

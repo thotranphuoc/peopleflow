@@ -60,6 +60,7 @@ CREATE TABLE attendances (
     check_in_time TIMESTAMPTZ,
     check_out_time TIMESTAMPTZ,
     check_in_photo_url TEXT,
+    check_out_photo_url TEXT,
     check_in_lat_lng VARCHAR(100),
     is_valid_location BOOLEAN DEFAULT TRUE,
     status VARCHAR(50) DEFAULT 'pending',

@@ -31,6 +31,10 @@ export interface AttendanceDayRow {
   status: string;
   supplement_reason: string | null;
   approval_note: string | null;
+  /** false = chấm công ngoài khu vực văn phòng (cần duyệt). */
+  is_valid_location?: boolean;
+  /** Tọa độ GPS check-in "lat,lng" (để mở Maps). */
+  check_in_lat_lng?: string | null;
 }
 
 export interface LeaveReportRow {
@@ -219,7 +223,7 @@ export class ReportService {
     let attQuery = this.supabase.supabase
       .from('attendances')
       .select(
-        'employee_id, work_date, check_in_time, check_out_time, status, supplement_reason, approval_note'
+        'employee_id, work_date, check_in_time, check_out_time, status, supplement_reason, approval_note, is_valid_location, check_in_lat_lng'
       )
       .eq('status', 'pending')
       .in('employee_id', empIds);
@@ -257,6 +261,8 @@ export class ReportService {
         status: string;
         supplement_reason: string | null;
         approval_note: string | null;
+        is_valid_location?: boolean;
+        check_in_lat_lng?: string | null;
       };
       const emp = empById.get(row.employee_id);
       if (!emp) continue;
@@ -281,6 +287,8 @@ export class ReportService {
         status: row.status ?? 'pending',
         supplement_reason: row.supplement_reason ?? null,
         approval_note: row.approval_note ?? null,
+        is_valid_location: row.is_valid_location ?? true,
+        check_in_lat_lng: row.check_in_lat_lng ?? null,
       });
     }
     result.sort((a, b) => b.work_date.localeCompare(a.work_date) || a.employee_code.localeCompare(b.employee_code));
@@ -306,7 +314,7 @@ export class ReportService {
     let attQuery = this.supabase.supabase
       .from('attendances')
       .select(
-        'employee_id, work_date, check_in_time, check_out_time, status, supplement_reason, approval_note'
+        'employee_id, work_date, check_in_time, check_out_time, status, supplement_reason, approval_note, is_valid_location, check_in_lat_lng'
       )
       .in('employee_id', empIds);
     if (endDate) {
@@ -352,6 +360,8 @@ export class ReportService {
         status: string;
         supplement_reason: string | null;
         approval_note: string | null;
+        is_valid_location?: boolean;
+        check_in_lat_lng?: string | null;
       };
       const emp = empById.get(row.employee_id);
       if (!emp) continue;
@@ -376,6 +386,8 @@ export class ReportService {
         status: row.status ?? 'pending',
         supplement_reason: row.supplement_reason ?? null,
         approval_note: row.approval_note ?? null,
+        is_valid_location: row.is_valid_location ?? true,
+        check_in_lat_lng: row.check_in_lat_lng ?? null,
       });
     }
     result.sort((a, b) => a.employee_code.localeCompare(b.employee_code));

@@ -103,6 +103,7 @@ export interface Attendance {
   check_in_time: string | null;
   check_out_time: string | null;
   check_in_photo_url: string | null;
+  check_out_photo_url: string | null;
   check_in_lat_lng: string | null;
   is_valid_location: boolean;
   status: 'valid' | 'pending' | 'violation';

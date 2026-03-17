@@ -89,33 +89,67 @@ export class AttendanceService {
     return distanceMeters(o.lat, o.lng, lat, lng) <= o.radiusMeters;
   }
 
-  /** Upload ảnh selfie, trả về public path hoặc null. */
+  /** Upload ảnh selfie, trả về path (bucket private nên dùng signed URL khi hiển thị). */
   private async uploadCheckInPhoto(file: Blob, employeeId: string, date: string, suffix: string): Promise<string | null> {
-    const ext = 'image/jpeg'.startsWith('image/') ? 'jpg' : 'png';
-    const path = `${employeeId}/${date}-${suffix}.${ext}`;
+    if (!file || file.size === 0) return null;
+    const path = `${employeeId}/${date}-${suffix}.jpg`;
     const { error } = await this.supabase.supabase.storage
       .from('check-in-photos')
       .upload(path, file, { contentType: 'image/jpeg', upsert: true });
-    if (error) return null;
-    const { data: urlData } = this.supabase.supabase.storage.from('check-in-photos').getPublicUrl(path);
-    return urlData?.publicUrl ?? null;
+    if (error) {
+      console.warn('[uploadCheckInPhoto]', error.message, error);
+      return null;
+    }
+    return path;
   }
 
-  /** Nén ảnh dưới 200KB (target maxBytes). */
-  async compressImageUnder200KB(file: File | Blob): Promise<Blob> {
+  /** Lấy signed URL cho ảnh check-in (bucket private). pathOrUrl: path hoặc URL cũ. */
+  async getSignedPhotoUrl(pathOrUrl: string): Promise<string | null> {
+    const path = this.extractStoragePath(pathOrUrl);
+    if (!path) return null;
+    const { data, error } = await this.supabase.supabase.storage
+      .from('check-in-photos')
+      .createSignedUrl(path, 3600);
+    if (error) return null;
+    return data?.signedUrl ?? null;
+  }
+
+  private extractStoragePath(pathOrUrl: string): string | null {
+    if (!pathOrUrl?.trim()) return null;
+    const s = pathOrUrl.trim();
+    const match = s.match(/check-in-photos\/(.+)$/);
+    if (match) return match[1];
+    if (s.includes('/') && !s.startsWith('http')) return s;
+    return null;
+  }
+
+  /** Nén ảnh nhỏ (chỉ tham khảo): resize max 480px, target 60KB. */
+  private async compressCheckInPhoto(file: File | Blob): Promise<Blob> {
     const img = await createImageBitmap(file as Blob);
-    const maxBytes = 200 * 1024;
-    let quality = 0.85;
+    const maxBytes = 60 * 1024;
+    const maxSize = 480;
+    let w = img.width;
+    let h = img.height;
+    if (w > maxSize || h > maxSize) {
+      if (w > h) {
+        h = Math.round((h * maxSize) / w);
+        w = maxSize;
+      } else {
+        w = Math.round((w * maxSize) / h);
+        h = maxSize;
+      }
+    }
+    let quality = 0.5;
     let blob: Blob = await new Promise((res) => {
       const c = document.createElement('canvas');
-      c.width = img.width;
-      c.height = img.height;
+      c.width = w;
+      c.height = h;
       const ctx = c.getContext('2d');
       if (!ctx) {
         res(file as Blob);
         return;
       }
-      ctx.drawImage(img, 0, 0);
+      ctx.drawImage(img, 0, 0, w, h);
       c.toBlob(
         (b) => res(b ?? (file as Blob)),
         'image/jpeg',
@@ -126,14 +160,14 @@ export class AttendanceService {
       quality -= 0.1;
       blob = await new Promise((res) => {
         const c = document.createElement('canvas');
-        c.width = img.width;
-        c.height = img.height;
+        c.width = w;
+        c.height = h;
         const ctx = c.getContext('2d');
         if (!ctx) {
           res(blob);
           return;
         }
-        ctx.drawImage(img, 0, 0);
+        ctx.drawImage(img, 0, 0, w, h);
         c.toBlob((b) => res(b ?? blob), 'image/jpeg', quality);
       });
     }
@@ -153,7 +187,7 @@ export class AttendanceService {
 
     let photoUrl: string | null = null;
     if (payload.photoFile) {
-      const compressed = await this.compressImageUnder200KB(payload.photoFile);
+      const compressed = await this.compressCheckInPhoto(payload.photoFile);
       photoUrl = await this.uploadCheckInPhoto(
         compressed,
         userId,
@@ -165,7 +199,7 @@ export class AttendanceService {
     if (payload.isCheckOut) {
       const { error } = await this.supabase.supabase
         .from('attendances')
-        .update({ check_out_time: now })
+        .update({ check_out_time: now, check_out_photo_url: photoUrl })
         .eq('employee_id', userId)
         .eq('work_date', payload.workDate);
       if (error) return { error: error.message };

@@ -1,12 +1,16 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
+import { PhotoViewerDialogComponent } from './photo-viewer-dialog.component';
+import { CheckInPhotoComponent } from './check-in-photo.component';
 
 export interface DayDetailDialogData {
   date: string;
   leaveLabel?: string | null;
   checkInTime?: string | null;
   checkOutTime?: string | null;
+  checkInPhotoUrl?: string | null;
+  checkOutPhotoUrl?: string | null;
   durationLabel?: string | null;
   holidayName?: string | null;
 }
@@ -15,7 +19,7 @@ export interface DayDetailDialogData {
   selector: 'app-day-detail-dialog',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatDialogModule, MatButtonModule],
+  imports: [MatDialogModule, MatButtonModule, CheckInPhotoComponent],
   template: `
     <h2 mat-dialog-title>Chi tiết ngày {{ formatDate(data.date) }}</h2>
     <mat-dialog-content>
@@ -36,7 +40,23 @@ export interface DayDetailDialogData {
           <p class="detail-row"><strong>Tổng giờ làm:</strong> {{ data.durationLabel }}</p>
         }
       }
-      @if (!data.leaveLabel && !data.holidayName && !data.checkInTime && !data.checkOutTime) {
+      @if (data.checkInPhotoUrl) {
+        <p class="detail-row"><strong>Ảnh check-in:</strong></p>
+        <app-check-in-photo
+          [pathOrUrl]="data.checkInPhotoUrl"
+          imgClass="photo-thumb"
+          (photoClick)="openPhoto($event)"
+        />
+      }
+      @if (data.checkOutPhotoUrl) {
+        <p class="detail-row"><strong>Ảnh check-out:</strong></p>
+        <app-check-in-photo
+          [pathOrUrl]="data.checkOutPhotoUrl"
+          imgClass="photo-thumb"
+          (photoClick)="openPhoto($event)"
+        />
+      }
+      @if (!data.leaveLabel && !data.holidayName && !data.checkInTime && !data.checkOutTime && !data.checkInPhotoUrl && !data.checkOutPhotoUrl) {
         <p class="detail-row muted">Chưa có thông tin chấm công.</p>
       }
     </mat-dialog-content>
@@ -55,6 +75,11 @@ export interface DayDetailDialogData {
 })
 export class DayDetailDialogComponent {
   readonly data: DayDetailDialogData = inject(MAT_DIALOG_DATA);
+  private readonly dialog = inject(MatDialog);
+
+  openPhoto(url: string): void {
+    this.dialog.open(PhotoViewerDialogComponent, { data: { photoUrl: url }, maxWidth: '95vw' });
+  }
 
   formatDate(dateStr: string): string {
     if (!dateStr) return '';

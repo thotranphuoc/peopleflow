@@ -55,6 +55,22 @@ Chỉ cần chạy **một file** trong Supabase SQL Editor:
 
 ---
 
+## Xóa ảnh check-in cũ (60 ngày)
+
+Ảnh chấm công chỉ lưu **60 ngày** để tiết kiệm storage. Cần deploy Edge Function và cấu hình cron:
+
+1. **Deploy Edge Function:**
+   ```bash
+   cd people-flow && supabase functions deploy cleanup-old-checkin-photos
+   ```
+
+2. **Cấu hình cron:** Xem `36-cron-cleanup-old-photos.sql` (pg_cron) hoặc dùng [cron-job.org](https://cron-job.org) gọi URL mỗi ngày:
+   ```
+   POST https://YOUR_PROJECT.supabase.co/functions/v1/cleanup-old-checkin-photos
+   ```
+
+---
+
 ## Gợi ý thiết kế database (không bắt buộc)
 
 Dưới đây là các gợi ý có thể cân nhắc thêm sau khi schema chính đã chạy ổn định.

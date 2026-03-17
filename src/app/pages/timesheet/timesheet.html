@@ -7,6 +7,15 @@
       <div class="check-block check-in-block check-block-readonly">
         <mat-icon class="check-icon">login</mat-icon>
         <span class="check-time">{{ rec.check_in_time ? (rec.check_in_time | date:'shortTime') : '—' }}</span>
+        @if (rec.check_in_photo_url) {
+          <app-check-in-photo
+            [pathOrUrl]="rec.check_in_photo_url"
+            [refreshTrigger]="photoRefreshTrigger()"
+            imgClass="check-photo-thumb"
+            title="Xem ảnh check-in"
+            (photoClick)="openPhotoViewer($event, 'Ảnh check-in hôm nay')"
+          />
+        }
       </div>
       <button
         type="button"
@@ -17,6 +26,17 @@
       >
         <mat-icon class="check-icon">logout</mat-icon>
         <span class="check-time">{{ rec.check_out_time ? (rec.check_out_time | date:'shortTime') : '—' }}</span>
+        @if (rec.check_out_photo_url) {
+          <span class="check-photo-wrap" (click)="$event.stopPropagation()">
+            <app-check-in-photo
+              [pathOrUrl]="rec.check_out_photo_url"
+              [refreshTrigger]="photoRefreshTrigger()"
+              imgClass="check-photo-thumb"
+              title="Xem ảnh check-out"
+              (photoClick)="openPhotoViewer($event, 'Ảnh check-out hôm nay')"
+            />
+          </span>
+        }
       </button>
     </div>
     @if (capturing()) {
@@ -34,7 +54,15 @@
     </button>
   }
   @if (locationWarning()) {
-    <p class="location-warn">{{ locationWarning() }}</p>
+    <p class="location-warn">
+      {{ locationWarning() }}
+      @if (locationWarningCoords(); as coords) {
+        —
+        <button type="button" class="location-link" (click)="openLocationOnMap(coords.lat, coords.lng)">
+          Xem vị trí trên bản đồ
+        </button>
+      }
+    </p>
   }
   @if (submitError()) {
     <p class="error-msg">{{ submitError() }}</p>
@@ -74,7 +102,7 @@
             [class.leave-cell]="!!d.leaveLabel"
             [class.holiday-cell]="!!d.holidayName && !d.leaveLabel"
             [class.can-supplement]="d.canSupplement"
-            [class.has-detail]="!!d.leaveLabel || !!d.holidayName || !!d.check_in_time || !!d.check_out_time"
+            [class.has-detail]="!!d.leaveLabel || !!d.holidayName || !!d.check_in_time || !!d.check_out_time || !!d.check_in_photo_url || !!d.check_out_photo_url"
             [style.background]="cellBackground(d)"
             [title]="cellTitle(d)"
             (click)="onDayClick(d, $event); d.canSupplement && openSupplementForm(d)"

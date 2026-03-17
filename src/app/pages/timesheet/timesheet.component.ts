@@ -14,6 +14,9 @@ import {
   CameraCaptureDialogComponent,
   type CameraCaptureResult,
 } from './camera-capture-dialog.component';
+import { PhotoViewerDialogComponent } from './photo-viewer-dialog.component';
+import { CheckInPhotoComponent } from './check-in-photo.component';
+import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
 import { AttendanceHeatmapService } from '../../core/services/attendance-heatmap.service';
 import type { Attendance, AttendanceStatus } from '../../core/models';
 
@@ -40,7 +43,7 @@ function effectiveMinutes(
   selector: 'app-timesheet',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, FormsModule, MatIconModule],
+  imports: [DatePipe, FormsModule, MatIconModule, CheckInPhotoComponent],
   templateUrl: './timesheet.html',
   styleUrl: './timesheet.scss',
 })
@@ -59,6 +62,10 @@ export class TimesheetComponent implements OnInit {
   protected readonly capturing = signal(false);
   protected readonly submitError = signal<string | null>(null);
   protected readonly locationWarning = signal<string | null>(null);
+  /** Tọa độ khi cảnh báo ngoài vùng (để mở Maps). */
+  protected readonly locationWarningCoords = signal<{ lat: number; lng: number } | null>(null);
+  /** Tăng sau mỗi lần upload ảnh thành công → ép CheckInPhoto re-fetch signed URL. */
+  protected readonly photoRefreshTrigger = signal(0);
   protected readonly currentYearMonth = signal<string>(this.getCurrentYearMonth());
 
   protected readonly attendances = this.attendanceService.attendances;
@@ -96,6 +103,8 @@ export class TimesheetComponent implements OnInit {
       isToday: boolean;
       check_in_time: string | null;
       check_out_time: string | null;
+      check_in_photo_url: string | null;
+      check_out_photo_url: string | null;
       durationLabel: string | null;
       effectiveMinutes: number | null;
       holidayName: string | null;
@@ -113,6 +122,8 @@ export class TimesheetComponent implements OnInit {
         isToday: false,
         check_in_time: null,
         check_out_time: null,
+        check_in_photo_url: null,
+        check_out_photo_url: null,
         durationLabel: null,
         effectiveMinutes: null,
         holidayName: null,
@@ -147,6 +158,8 @@ export class TimesheetComponent implements OnInit {
         isToday: date === todayStr,
         check_in_time: rec?.check_in_time ?? null,
         check_out_time: rec?.check_out_time ?? null,
+        check_in_photo_url: rec?.check_in_photo_url ?? null,
+        check_out_photo_url: rec?.check_out_photo_url ?? null,
         durationLabel,
         effectiveMinutes: effMin,
         holidayName,
@@ -275,10 +288,13 @@ export class TimesheetComponent implements OnInit {
     holidayName?: string | null;
     check_in_time?: string | null;
     check_out_time?: string | null;
+    check_in_photo_url?: string | null;
+    check_out_photo_url?: string | null;
     durationLabel?: string | null;
   }, _event: Event): void {
     if (d.canSupplement) return;
-    const hasDetail = d.leaveLabel || d.holidayName || d.check_in_time || d.check_out_time;
+    const hasDetail =
+      d.leaveLabel || d.holidayName || d.check_in_time || d.check_out_time || d.check_in_photo_url || d.check_out_photo_url;
     if (!hasDetail || !d.date) return;
     this.dialog.open(DayDetailDialogComponent, {
       data: {
@@ -287,9 +303,11 @@ export class TimesheetComponent implements OnInit {
         holidayName: d.holidayName ?? null,
         checkInTime: d.check_in_time ?? null,
         checkOutTime: d.check_out_time ?? null,
+        checkInPhotoUrl: d.check_in_photo_url ?? null,
+        checkOutPhotoUrl: d.check_out_photo_url ?? null,
         durationLabel: d.durationLabel ?? null,
       } satisfies DayDetailDialogData,
-      width: '320px',
+      width: '360px',
     });
   }
 
@@ -308,6 +326,17 @@ export class TimesheetComponent implements OnInit {
     this.dialog.open(DayDetailDialogComponent, {
       data: { date: d.date, leaveLabel: d.leaveLabel } satisfies DayDetailDialogData,
       width: '320px',
+    });
+  }
+
+  openLocationOnMap(lat: number, lng: number): void {
+    window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
+  }
+
+  openPhotoViewer(photoUrl: string, title?: string): void {
+    this.dialog.open(PhotoViewerDialogComponent, {
+      data: { photoUrl, title },
+      maxWidth: '95vw',
     });
   }
 
@@ -334,14 +363,24 @@ export class TimesheetComponent implements OnInit {
 
   /** Xác nhận rồi mới Check-out (chỉ cho phép cập nhật Check-out, không cho sửa Check-in). */
   confirmAndCheckOut(): void {
-    const msg = 'Bạn có chắc chắn muốn ghi nhận Check-out ngay bây giờ? Giờ sẽ được ghi nhận là thời điểm hiện tại.';
-    if (!confirm(msg)) return;
-    void this.doCheckIn(true);
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: 'Xác nhận Check-out',
+        message: 'Bạn có chắc chắn muốn ghi nhận Check-out ngay bây giờ? Giờ sẽ được ghi nhận là thời điểm hiện tại.',
+        confirmText: 'Ghi nhận',
+        cancelText: 'Hủy',
+      },
+      width: '360px',
+    });
+    ref.afterClosed().subscribe((ok) => {
+      if (ok) void this.doCheckIn(true);
+    });
   }
 
   async doCheckIn(isCheckOut: boolean): Promise<void> {
     this.submitError.set(null);
     this.locationWarning.set(null);
+    this.locationWarningCoords.set(null);
     this.capturing.set(true);
 
     const title = isCheckOut ? 'Chụp ảnh check-out' : 'Chụp ảnh check-in';
@@ -374,8 +413,9 @@ export class TimesheetComponent implements OnInit {
       const office = await this.attendanceService.getOfficeLocation();
       if (!this.attendanceService.isWithinOffice(lat, lng, office)) {
         this.locationWarning.set(
-          `Bạn đang ngoài vùng văn phòng (${office.radiusMeters}m). Vị trí: lat ${lat.toFixed(6)}, lng ${lng.toFixed(6)}. Dữ liệu vẫn được ghi nhận.`
+          `Bạn đang ngoài vùng văn phòng (${office.radiusMeters}m). Dữ liệu vẫn được ghi nhận.`
         );
+        this.locationWarningCoords.set({ lat, lng });
       }
     } catch {
       this.locationWarning.set('Không lấy được GPS. Vẫn ghi nhận với tọa độ mặc định.');
@@ -395,6 +435,17 @@ export class TimesheetComponent implements OnInit {
 
     const { error } = await this.attendanceService.submitCheckIn(payload);
     this.capturing.set(false);
-    if (error) this.submitError.set(error);
+    if (error) {
+      this.submitError.set(error);
+      return;
+    }
+    this.photoRefreshTrigger.update((v) => v + 1);
+    const blobUrl = URL.createObjectURL(photo);
+    const successTitle = isCheckOut ? 'Check-out thành công' : 'Check-in thành công';
+    const successRef = this.dialog.open(PhotoViewerDialogComponent, {
+      data: { photoUrl: blobUrl, title: successTitle, showSuccess: true },
+      maxWidth: '95vw',
+    });
+    successRef.afterClosed().subscribe(() => URL.revokeObjectURL(blobUrl));
   }
 }

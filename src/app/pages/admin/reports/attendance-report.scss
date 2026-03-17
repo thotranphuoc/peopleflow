@@ -6,6 +6,9 @@
 .view-mode-toggle button.active { color: var(--ml-primary); font-weight: 600; }
 .filter-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
 .filter-row mat-form-field { max-width: 160px; }
+.reason-cell { max-width: 220px; }
+.reason-cell .maps-link { margin-left: 0.5rem; color: var(--ml-primary); text-decoration: none; white-space: nowrap; }
+.reason-cell .maps-link:hover { text-decoration: underline; }
 .note-cell { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .table-wrap { overflow-x: auto; margin-top: 0.5rem; }
 .report-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }

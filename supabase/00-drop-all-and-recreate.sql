@@ -11,6 +11,7 @@
 -- nếu muốn xóa sạch bucket/file thì vào Dashboard > Storage > check-in-photos > xóa thủ công.
 DROP POLICY IF EXISTS "Authenticated read check-in-photos" ON storage.objects;
 DROP POLICY IF EXISTS "Authenticated upload check-in-photos" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated update check-in-photos" ON storage.objects;
 
 -- Bảng app (bảng con trước, bảng cha sau)
 DROP TABLE IF EXISTS notifications CASCADE;
@@ -219,6 +220,7 @@ CREATE TABLE attendances (
     check_in_time TIMESTAMPTZ,
     check_out_time TIMESTAMPTZ,
     check_in_photo_url TEXT,
+    check_out_photo_url TEXT,
     check_in_lat_lng VARCHAR(100),
     is_valid_location BOOLEAN DEFAULT TRUE,
     status VARCHAR(50) DEFAULT 'pending',
@@ -386,6 +388,11 @@ USING (bucket_id = 'check-in-photos');
 
 CREATE POLICY "Authenticated upload check-in-photos"
 ON storage.objects FOR INSERT TO authenticated
+WITH CHECK (bucket_id = 'check-in-photos');
+
+CREATE POLICY "Authenticated update check-in-photos"
+ON storage.objects FOR UPDATE TO authenticated
+USING (bucket_id = 'check-in-photos')
 WITH CHECK (bucket_id = 'check-in-photos');
 
 -- ============================================================

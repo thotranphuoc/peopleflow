@@ -155,6 +155,22 @@ export class AttendanceReportComponent implements OnInit {
     return map[status] ?? status;
   }
 
+  /** Lý do cần duyệt: ngoài VP, bổ sung thủ công, v.v. */
+  protected requiresApprovalReason(r: AttendanceDayRow): string {
+    const parts: string[] = [];
+    if (r.is_valid_location === false) parts.push('Ngoài khu vực VP');
+    if (r.supplement_reason?.trim()) parts.push('Bổ sung thủ công');
+    return parts.length ? parts.join('; ') : '—';
+  }
+
+  /** URL Google Maps từ tọa độ "lat,lng". */
+  protected getMapsUrl(latLng: string | null | undefined): string | null {
+    if (!latLng?.trim()) return null;
+    const [lat, lng] = latLng.trim().split(',');
+    if (!lat || !lng || isNaN(Number(lat)) || isNaN(Number(lng))) return null;
+    return `https://www.google.com/maps?q=${encodeURIComponent(lat.trim())},${encodeURIComponent(lng.trim())}`;
+  }
+
   protected rowKey(r: AttendanceDayRow): string {
     return `${r.employee_id}:${r.work_date}`;
   }
@@ -235,6 +251,7 @@ export class AttendanceReportComponent implements OnInit {
       check_out: r.check_out_time ?? '',
       total_work_minutes: r.total_work_minutes ?? '',
       status: r.status,
+      ly_do_can_duyet: this.requiresApprovalReason(r),
       supplement_reason: r.supplement_reason ?? '',
       approval_note: r.approval_note ?? '',
     }));
