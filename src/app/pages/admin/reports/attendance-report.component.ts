@@ -84,6 +84,11 @@ export class AttendanceReportComponent implements OnInit {
     return list.filter((e) => e.department_id === deptId);
   });
 
+  /** Tổng phút ghi nhận trong tab Theo ngày (để hiển thị hàng Tổng). */
+  protected readonly totalRecordedMinutesDay = computed(() => {
+    return this.rowsByDay().reduce((sum, r) => sum + (r.total_work_minutes ?? 0), 0);
+  });
+
   async ngOnInit(): Promise<void> {
     const [depts, emps] = await Promise.all([
       this.employeeService.getDepartments(),

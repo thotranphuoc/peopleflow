@@ -16,6 +16,8 @@
 .report-table .num { text-align: right; }
 .report-table td { padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--ml-border); }
 .report-table td.num { text-align: right; }
+.report-table tfoot .total-row { border-top: 2px solid var(--ml-border); background: var(--ml-bg-alt, #f8fafc); }
+.report-table tfoot .total-row td { padding: 0.6rem 0.75rem; }
 .actions-cell { white-space: nowrap; }
 .actions-cell .approval-note-input { max-width: 140px; margin-right: 0.5rem; padding: 0.25rem 0.5rem; font-size: 0.8125rem; border: 1px solid var(--ml-border); border-radius: 4px; }
 .actions-cell button { margin-right: 0.25rem; }

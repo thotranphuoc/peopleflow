@@ -93,7 +93,11 @@
             <th>Nhân viên</th>
             <th>Ngày</th>
             <th>Giờ làm</th>
-            <th>Tổng TG làm</th>
+            @if (viewMode() === 'day') {
+              <th class="num">Giờ ghi nhận (tối đa 8h)</th>
+            } @else {
+              <th>Tổng TG làm</th>
+            }
             <th>Trạng thái</th>
             @if (viewMode() === 'pending') {
               <th>Lý do cần duyệt</th>
@@ -123,7 +127,7 @@
                   —
                 }
               </td>
-              <td>{{ formatDuration(r.total_work_minutes) }}</td>
+              <td [class.num]="viewMode() === 'day'">{{ formatDuration(r.total_work_minutes) }}</td>
               <td>{{ statusLabel(r.status) }}</td>
               @if (viewMode() === 'pending') {
                 <td class="reason-cell">
@@ -144,6 +148,15 @@
             </tr>
           }
         </tbody>
+        @if (viewMode() === 'day' && rowsByDay().length > 0) {
+          <tfoot>
+            <tr class="total-row">
+              <td colspan="3"><strong>Tổng</strong></td>
+              <td class="num"><strong>{{ formatDuration(totalRecordedMinutesDay()) }}</strong></td>
+              <td></td>
+            </tr>
+          </tfoot>
+        }
       </table>
     </div>
     @if (rowsByDay().length === 0) {
