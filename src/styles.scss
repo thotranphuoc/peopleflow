@@ -275,3 +275,23 @@ body {
     animation: none !important;
   }
 }
+
+/* Dialog: đảm bảo nền/padding ổn định trên mobile (iOS/Android). */
+.cdk-overlay-pane.ml-dialog-panel .mat-mdc-dialog-surface {
+  background: var(--ml-bg-card) !important;
+  color: var(--ml-text);
+  border-radius: var(--ml-radius-lg);
+  box-shadow: var(--ml-shadow-lg);
+}
+.cdk-overlay-pane.ml-dialog-panel .mat-mdc-dialog-content {
+  max-height: calc(85vh - 64px);
+}
+@media (max-width: 600px) {
+  .cdk-overlay-pane.ml-dialog-panel {
+    max-width: 95vw !important;
+  }
+  .cdk-overlay-pane.ml-dialog-panel .mat-mdc-dialog-surface {
+    width: 95vw !important;
+    margin: 0 !important;
+  }
+}

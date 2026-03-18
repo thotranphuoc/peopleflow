@@ -53,7 +53,8 @@ export interface SupplementFormDialogData {
       .dialog-date { margin-bottom: 1rem; }
       .full-width { width: 100%; }
       .error-msg { color: var(--ml-error); font-size: 0.875rem; margin-top: 0.5rem; }
-      mat-dialog-content { min-width: 280px; }
+      h2[mat-dialog-title] { margin: 0; }
+      mat-dialog-content { min-width: 0; }
     `,
   ],
 })

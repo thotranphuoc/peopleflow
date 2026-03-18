@@ -376,7 +376,13 @@ export class TimesheetComponent implements OnInit {
       checkOut = `${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}`;
     }
     const data: SupplementFormDialogData = { date: d.date, checkIn, checkOut };
-    const ref = this.dialog.open(SupplementFormDialogComponent, { data, width: '320px' });
+    const ref = this.dialog.open(SupplementFormDialogComponent, {
+      data,
+      width: '360px',
+      maxWidth: '95vw',
+      maxHeight: '85vh',
+      panelClass: 'ml-dialog-panel',
+    });
     ref.afterClosed().subscribe((result) => {
       if (result) {
         const uid = this.auth.user()?.id;
